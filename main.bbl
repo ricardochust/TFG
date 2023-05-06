@@ -25,6 +25,16 @@
 EHW, ``Pagina portada de la {EHW},'' 2023. [Online]. Available: \url{https://hyperloopweek.com/}
 \BIBentrySTDinterwordspacing
 
+\bibitem{web:git:installationGit}
+\BIBentryALTinterwordspacing
+L.~Torvalds, ``Instalador de git,'' 2023. [Online]. Available: \url{https://git-scm.com/download}
+\BIBentrySTDinterwordspacing
+
+\bibitem{web:git:installationGitHelp}
+\BIBentryALTinterwordspacing
+------, ``Como instalar git,'' 2023. [Online]. Available: \url{https://git-scm.com/book/en/v2/Getting-Started-Installing-Git}
+\BIBentrySTDinterwordspacing
+
 \bibitem{web:STM32:installationCube}
 \BIBentryALTinterwordspacing
 STMicroelectronics, ``Pagina de instalación del {stm32CubeIDE},'' 2023. [Online]. Available: \url{https://www.st.com/en/development-tools/stm32cubeide.html}
