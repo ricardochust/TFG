@@ -30,12 +30,111 @@
 \usepackage{multirow}
 \usepackage{caption}
 \usepackage{mathtools, nccmath}
-\usepackage[utf8]{inputenc}
+
 \usepackage[T1]{fontenc}
+\usepackage{tocloft}
 \DeclarePairedDelimiter{\nint}\lfloor\rceil
 \captionsetup[table]{name=Tabla}
 \DeclarePairedDelimiter\abs{\lvert}{\rvert}%
 \DeclarePairedDelimiter\norm{\lVert}{\rVert}%
+
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{tcolorbox}
+\usepackage{xcolor}
+\usepackage{listings}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+    %CODE CONF
+%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{Naranjastring}{HTML}{FF5733}
+\definecolor{k3}{HTML}{27A48A}
+\definecolor{codeorange}{HTML}{EE7623}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{HTML}{003B4D}
+\definecolor{funccolor}{HTML}{C1531B}
+\definecolor{color-lang}{HTML}{C1C5C8}
+\definecolor{colorvar}{HTML}{7398AD}
+\definecolor{green--}{HTML}{A0CA92}
+%---------------------- C ----------------------- %
+
+\lstdefinestyle{myCstyle}{
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codeorange},
+  keywordstyle=\color{codeorange},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{green--},
+  basicstyle=\ttfamily\footnotesize\linespread{0cm}\color{color-lang},
+  breakatwhitespace=false,                         
+  captionpos=b,                    
+  keepspaces=false,                                                                   
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2,
+  inputpath = codigo,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+  breaklines = false,
+  keywordstyle=[2]\color{codepurple},
+  keywordstyle=[3]\color{funccolor},
+  keywordstyle=[4]\color{colorvar},
+  keywordstyle=[5]\color{Naranjastring},
+  keywords=[2]{f},
+  keywords=[5]{STLIB, LinearSensor},
+  keywords=[4]{value, slope, offset, pressure_1, Board, PF11},
+  keywords=[3]{main, start, read, update,printf},
+  morekeywords = {_delay_ms, sei, ISR, uint8_t, LinearSensor, uint16_t, STLIB, }
+  %firstnumber=(auto|last|<number>) para comenzar el conteo de lineas de listing con otro numero. Auto empieza por 1, last, continua la cuenta del listing anterior, number es un numero cualquiera.
+}
+
+
+% set listings
+\lstset{%
+    basicstyle=\footnotesize\ttfamily,
+%   captionpos=t,
+    framesep=5em,
+    language = C++, style=myCstyle
+}
+
+% define backgroundcolor
+\definecolor{bggray}{HTML}{003B4D}
+
+% add frame environment
+\usepackage[%
+    framemethod=tikz,
+    skipbelow=\topskip,
+    skipabove=\topskip
+]{mdframed}
+\mdfsetup{%
+    leftmargin=0pt,
+    rightmargin=0pt,
+    backgroundcolor=bggray,
+    middlelinecolor=black,
+    roundcorner=7
+}
+
+\usepackage{etoolbox}% >= v2.1 2011-01-03
+\BeforeBeginEnvironment{lstlisting}{\begin{mdframed}\vspace{-0.4em}}
+\AfterEndEnvironment{lstlisting}{\end{mdframed}}
+
+% needed for \lstcapt
+\def\ifempty#1{\def\temparg{#1}\ifx\temparg\empty}
+
+% make new caption command for listings
+\usepackage{caption}
+\newcommand{\lstcapt}[2][]{%
+    \ifempty{#1}%
+        \captionof{lstlisting}{#2}%
+    \else%
+        \captionof{lstlisting}[#1]{#2}%
+    \fi%
+    \vspace{0.75\baselineskip}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+        %CODE CONF%
+%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\Universidad}{Universitat Politècnica de València}
 \newcommand{\LogoUniversidad}{LogoUPV}
@@ -93,7 +192,7 @@ Palabras clave: ST-LIB, STM32, Hyperloop, ingeniería de computadores, desarroll
 
 
 \newpage
-\renewcommand{\vspace}[2]{}% Gobble 2 arguments after \vspace
+\setlength{\cftbeforetoctitleskip}{-3em}
 \tableofcontents
 \newpage
 
@@ -105,7 +204,7 @@ La EHW es una competición internacional organizada por múltiples universidades
 La competición se divide en dos partes. La primera es la fase de desarrollo, que cubre prácticamente todo el año escolar. Esta parte se basa en la entrega de múltiples documentos técnicos que describen el vehículo así como las nuevas tecnologías desarrolladas para este. La otra parte es la presentación, que sucede a mediados de Julio, durante una semana que da nombre a la competición. Aquí es cuando el trabajo de todo un año da su fruto, y se muestra el vehículo en funcionamiento y se le somete a varias pruebas para mostrar estas nuevas tecnologías que fueron documentadas en la primera parte. Al terminar la EHW queda recoger y comenzar un nuevo ciclo. \par \vspace{0.3 cm}
 Lo especial de esta competición es que la fase de desarrollo dura solamente un año. Además, aunque no sea obligatorio presentar un nuevo vehículo cada año, como el objetivo principal de la competición es la mejora y la innovación, es mas que recomendable. Al tener solo un año para preparar un vehículo funcional y que cumpla los requisitos de seguridad de la EHW, el tiempo es un recurso extremadamente importante. \par \vspace{0.3 cm}
 Debido a esto, hemos pensado en crear un código reusable, simple de usar, testeado y flexible. Este código es la librería ST-LIB. Su objetivo es, por tanto, ahorrar la mayor cantidad de tiempo al desarrollo de código para la electrónica del vehículo, al mismo tiempo que nos ofrece mayor seguridad al tener un código probado y perfilado decenas de veces. \par
-La {\bfseries simplicidad} es necesaria para que los nuevos miembros no tengan que sufrir una curva de aprendizaje demasiado empinada, que perjudique su instrucción en la materia o incluso los lleve a abandonar el proyecto al ser abrumados por su dificultad. La {\bfseries reusabilidad} servirá para que no tengamos que desarrollar una librería nueva cada año, y podamos dedicarnos en su lugar a expandirla y mejorarla. Por último necesitaremos que este {\bfseries testeado} y sea {\bfseries flexible} para evitar encontrarnos con fallos o necesidades no cubiertas en un futuro al trabajar con la librería. 
+La {simplicidad} es necesaria para que los nuevos miembros no tengan que sufrir una curva de aprendizaje demasiado empinada, que perjudique su instrucción en la materia o incluso los lleve a abandonar el proyecto al ser abrumados por su dificultad. La {reusabilidad} servirá para que no tengamos que desarrollar una librería nueva cada año, y podamos dedicarnos en su lugar a expandirla y mejorarla. Por último necesitaremos que este {testeado} y sea {flexible} para evitar encontrarnos con fallos o necesidades no cubiertas en un futuro al trabajar con la librería. 
 
 \subsection{Uso externo}
 Inicialmente la ST-LIB estaba diseñada entorno a las necesidades del proyecto Hyperloop H8, y no se tenía en consideración prepararla para uso público. No obstante, a lo largo de la fase de diseño y desarrollo se fue viendo esta posibilidad cada vez mas factible, debido principalmente a las necesidades de diseño impuestas y a la versatilidad de la HAL; una macro libreria de abstracción de la programación ensamblador para arquitecturas stm32 la cual funciona para todas las familias. \par
@@ -222,7 +321,96 @@ Todos los métodos están sobrecargados para dos tipos de parámetros, o bien cu
 Ahora pasaremos a explicar como maneja los castéos de las variables a binario. Aunque todas las variables tengan al menos una forma de transformarse a binario, esto no quiere decir que esta forma este codificada para el uso del programa o que sea la forma de castéo mas sencilla y eficiente. Por ello, la clase PacketValue sirve de soporte para la clase Packet y maneja los posibles valores que puede recibir como parámetros dependiendo de algunas propiedades que puedan requerir. Esta es una estructura de tipos que define grupos de tipos y dependiendo de a que tipo pertenezcan usa un método de traducción u otro. Los separadores de grupos definidos son isContainer y isIntegral, generando los grupos Container, Integral y CustomButNotContainer. Los que pertenecen al tipo isIntegral tienen una traducción directa a binario dada por C que esta demostrada ser la mas efectiva. Los que pertenecen a isContainer quiere decir que en verdad guarda mas de una única variable, como una array, un mapa o un paquete (ofreciendo la opción de nestear paquetes dentro de paquetes). 
 \par \vspace{0.3 cm}
 
-\subsubsection{}
+\subsubsection{Periféricos básicos: Analog y Digital}
+Analog y Digital en concepto son sencillos, y la mayoría del tiempo se pierde en configurarlos. Por ello, en la librería Core hemos creado las clases Analog, DigitalInput, DigitalOutput y EXTI principalmente para facilitar esto. \par
+La estructura de los tres primeros es la misma: mapas que alocan los recursos de la placa y los metodos inscribe, start, y get value/set state que permiten configurar un pin (ya definido en la clase Pin) y recibir la id de la configuración, inicializar todos los pines, y hacer una orden de lectura/escritura en los periférico. En este nivel aun se deben gestionar id's pero en la ST-LIB Low se pone una capa mas de abstracción para tenerlo como un objeto de una clase. 
+\par \vspace{0.3 cm}
+Para utilizarlo es tan sencillo como parece, primero convocas inscribe dandole como parametro el Pin que deseas configurar, y guardando su retorno en una variable uint8, luego convocas el start y por último tomas las lecturas cada vez que las necesites. Aquí un ejemplo del main:
+
+\begin{lstlisting}
+uint8_t DigitalID = DigitalInputService::inscribe(PA5);
+uint8_t AnalogID = ADC::inscribe(PA0).value(); #devuelve un optional
+uint8_t OutputID = DigitalOutputService::inscribe(PC0);
+HALAL::start(); #macro que contiene todos los metodos start necesarios
+while(1){
+  DigitalOutputService::set_pin_state(1);
+  printf(ADC::get_value(AnalogID));
+  printf(DigitalInputService::get_value(DigitalID));
+}
+\end{lstlisting}
+\par \vspace{0.3 cm}
+Se recomienda utilizar el HALAL start en lugar de usar los starts de los modulos ya que algunos modulos dependen de que otros hayan iniciado y tienen que activarse en un orden en concreto. Por ejemplo, el modulo ADC usa las DMA para capturar los valores sin usar capacidad de procesador para mejorar la velocidad del codigo, pero tiene el pequeño defecto de no funcionar si las DMA no 
+\par \vspace{0.3 cm}
+Aparte de estos tres sensores esta el EXTI (External Interrupt) que permite activar interrupciones directamente a partir de cableado. El EXTI es mas especial porque le puedes especificar que es lo que tiene que hacer cuando sea interrumpido a traves de una \textit{lambda expression}. Las lambda son basicamente funciones sin identificador, que se define por su clausula de captura de parametros, los parametros que recibe, y el codigo a ejecutar. 
+\begin{lstlisting}
+uint8_t externalID = ExternalInterrupt::inscribe(PA5,()[]{printf("Hola");},FALLING);
+HALAL::start();
+\end{lstlisting} 
+\par \vspace{0.3 cm}
+Este código define un external interrupt en el pin PA5 que imprimirá ``Hola'' cada vez que caiga la señal; es decir, que pase de 1 a 0. Puedes ponerle las opciones de RISING o FALLING, que quiere decir de 0 pasa a 1 y de 1 pasa a 0. \par\vspace{0.3 cm}
+Hasta ahora nos hemos referido a la función \textit{printf} como la función que imprime un texto, pero como el periférico por el que se imprime depende de la preferencia del programador, probablemente sea necesario sobreescribirla. Actualmente en la ST-LIB lo imprime por UART, un protocolo de comunicación del cual hablaremos en las próximas secciones. Dependiendo del modo de programación (Nucleo o Board) estara en el uart1 o en el uart2 (definidos en el Runes) \par
+La librería la sobreescribe en el modulo UART (sobreescribe el metodo write el cual es convocado por printf), así que para sobreescribirla debe removerse de UART primero.
+\subsubsection{CORDIC}
+El modulo CORDIC es una librería que aprovecha la unidad de calculo interna con el mismo nombre. Es una librería de aceleración de calculo trigonométrico la cual supera incluso a la librería arm math hecha para calculo por estimación en arquitecturas de microprocesadores. La razón por la que esta pequeña unidad la supera es porque esta diseñada específicamente para aplicar el algoritmo de Volder, especializado en funciones trigonométricas e hiperbólicas. \par
+La mayoría de las familias de microprocesadores STM incluyen la unidad de aceleración CORDIC, pero si el micro no lo incluye esta librería no funcionara y se deberá desactivar el módulo dentro de la HAL (normalmente si tu microprocesador no tiene CORDIC la flag de CORDIC MODULE esta ya desactivada, apareciendo el código dentro de los ifdef en grís).
+\par \vspace{0.3cm}
+Una de las peculiaridades del CORDIC es que solo funciona con lógica binaria; es decir, no acepta coma flotante (ni floats ni doubles). El módulo CORDIC ya viene con un metodo que transforma las float (en radianes) a int32 en el formato que el CORDIC recibe. Sin embargo, no se recomienda abusar de este método ya que la transformación de int a float consume muchos recursos desde el punto de vista de la optimización, haciendo que vaya mas lento incluso que la librería math arm con lógica de floats, lo cual le quita el sentido a usar el módulo CORDIC en primer lugar. \par
+Por ello CORDIC solo se puede usar de forma eficiente si tienes tres o mas operaciones trigonométricas consecutivas que aplicar a un valor antes de tener que recastearlo o si se usa lógica binaria en todo el código conectado a los cálculos trigonométricos. El primer caso se vería así:
+\begin{lstlisting}
+double angle = pi * 0.5;
+int32_t unary = RotationComputer::radian_f32_to_q31(angle); 
+int32_t *pointer1 = &unary;
+int32_t *pointer2;
+int32_t *pointer3;
+RotationComputer::cos_and_sin(pointer1, pointer2, pointer3, 1);
+RotationComputer::phase(pointer2,pointer3,pointer1,1);
+angle = RotationComputer::q31_to_radian_f32(unary);
+\end{lstlisting} 
+\par \vspace{0.3cm}
+El método cos and sin recibe un ángulo a traves de su primer parametro y calcula el coseno y el seno, metiendo estos valores en los punteros out que recibe como parametros. La razón por la que usa punteros es porque puede funcionar también con arrays de valores. El último valor es, de hecho, el tamaño de la array que recibe. La otra forma de usarlo, y la mas recomendable si tus periféricos te devuelven en int los valores a procesar (como suele ser el caso), es con la lógica de ints directamente:
+\begin{lstlisting}
+int32_t *values = values_array;
+int32_t *x;
+int32_t *y;
+RotationComputer:cos_and_sin(values,x,y,values_array_length);
+RotationComputer::phase(x,y,values,values_array_length);
+\end{lstlisting}
+\par \vspace{0.3cm}
+Lo único tener en cuenta que hay que traducir el formato en el que se reciba los valores a el formato unario para que el cálculo sea correcto. El formato de los angulos recorre todos los valores posibles de las int, donde $180^o$ es el valor máximo que puede tener la int y $-180^o$ el valor mínimo (máximo negativo). \par
+Esto tiene las ventajas de que aprovecha al máximo la precisión que le dan y que las sumas de angulos no sufren overflow, ya que la representación de los angulos negativos funciona igual que la de las ints. Por ejemplo, max int +1 es igual a -max int, y $179.99995^o + 0.0001^o = 180.00005^0 = -179.99995^o$. \par
+El formato de las coordenadas simplemente representa un espacio acotado en -1 y 1 tanto en x como en y. Cuando superas el límite simplemente sufre overflow. \par \vspace{0.3cm}
+Los metodos phase y modulus operan en dicho espacio. \textit{phase} mide el ángulo entre la recta formada por el punto dado y el punto de origen con el vector (1,0). Esto es especialmente útil para comparar dos angulos, ya que la fase entre ambos es \textit{``la fase del primero con el eje x - la fase del segundo con el eje x''}. Osea, se les hace fase a ambos vectores y se restan los resultados. \par
+\textit{modulus} sirve para obtener la distancia entre el origen y el punto dado como un valor escalar. Como esta distancia puede ser mayor que uno (el punto (1,1); por ejemplo), y como este numero solo puede ser positivo, devuelve una uint32 en lugar de una int32 para poder llegar hasta el 2, cambiando su imagen de [-1,1] a [0,2]. Esto es importante porque \textbf{el modulus tiene sus propias unidades}, por lo cual no se puede utilizar sin mas como unidad en el espacio. Si guardas el valor de retorno en una int en lugar de una uint y el resultado era mayor que 1 te devolvera un número negativo, lo cual es imposible pues las distancias (escalares) son positivas necesariamente. 
+\subsubsection{PWM}
+El modulo PWM (\textit{Power Width Modulated}) es un periférico especial que permite generar una señal periódica cuadrada con un periodo y un ciclo de trabajo \footnote{tiempo que se pasa activo dentro del periodo, en porcentaje. También se le conoce como \textit{duty cycle}} configurables. Estas señales son especialmente útiles para controlar motores, sincronizar comunicaciones y simular una señal análoga con cualquier voltaje deseado. 
+\par \vspace{0.3cm}
+El módulo PWM tiene una clase con constructor, por lo que para usarla debe guardarse el objeto cuando haya sido instancializado. Ademas del constructor, tiene los métodos turn on, turn off, set frequency, get frequency y set duty cycle. Estos metodos activan el PWM, lo desactivan, cambian la frecuencia (y con ello el periodo) con una uint dada, obtener la frecuencia que tiene guardada, y cambiar el duty cycle. \par
+Los periféricos de esta clase no se inicializan en el HALAL start como protección, ya que entre otras cosas las PWM sirven como control de motor, e inicializarlo de forma discreta podría ser peligroso. En su lugar, el usuario debe activarlo y desactivarlo cuando vea necesario. 
+\par \vspace{0.3cm}
+Ademas de la clase PWM, el módulo tiene tres clases que heredan de ella que añaden nuevas propiedades. Estas son PhasedPWM, DualPWM y DualPhasedPWM. PhasedPWM te permite añadir una fase angular a la onda cuadrada que genera el PWM, para sincronizar la onda con otras ondas a conveniencia. La DualPWM crea dos señales PWM negadas entre si. Y la DualPhasedPWM es una DualPWM a la cual se le puede aplicar fase (ambas son afectadas por el cambio ya que una es la negada de la otra). La fase es una float que puede ir desde -100\% hasta +100\%, que a nivel de onda representa un cambio de fase de -pi hasta +pi (en radianes). Un ejemplo rápido de uso:
+\begin{lstlisting}
+  DualPhasedPWM pwm(PA5,PA6);
+  pwm.set_duty_cycle(40.0);
+  pwm.set_frequency(1);
+  pwm.set_phase(30.0);
+  pwm.turn_on();
+\end{lstlisting}
+\par \vspace{0.3 cm}
+Con este código hemos puesto dos pwm negadas entre si en un duty cycle del 40\%, una frecuencia de 1 Hz, y una fase del 30\% (+pi*0.3 de fase angular). Como se puede comprobar operar las PWM se ha vuelto mucho mas sencillo ya que el módulo gestiona automaticamente toda la configuración de software.  
+
+\subsubsection{Time}
+La clase time incluye la gestión de los timers, las alarms, y el rtc (\textit{real time clock}). Como hay una cantidad limitada de timers en el microprocesador y algunos de estos son necesarios para hacer funcionar otros modulos como las PWM, en su lugar se utilizan tres timers generales para que gestionen la gran mayoria de las alarmas y una interfaz con los timers restantes en caso de querer una alarma crítica. \par
+Los timers generales low y mid estan configurados para crear una interrupción cada 50 microsegundos y cada milisegundo, respectivamente. Luego de saltar la interrupción comprueba si las condiciones de las alarmas configuradas por el usuario se han cumplido, si es el caso ejecuta la lambda expression que le corresponde y en caso contrario la ignora. Un ejemplo de configuración:
+\begin{lstlisting}
+  uint64_t counter = 0;
+  Time::register_mid_precision_alarm(100,[&](counter){counter++;});
+  Time::register_low_precision_alarm(100,[&](counter){printf(counter);});
+  HALAL::start();
+\end{lstlisting}
+\par \vspace{0.3 cm}
+Este código sumara cada 100 microsegundos +1 al contador y lo imprimirá cada 100 milisegundos. Hay que indicar que el divisor del mid precision redondea hacia abajo, asi que poner menos de 50 microsegundos como intervalo de la alarma hara que no funcione correctamente. \par
+
+
 
 \section{Testeo y profiling de la librería}
 \subsection{Testing automático}
