@@ -43,6 +43,7 @@
 \usepackage{tcolorbox}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{float}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,7 +74,7 @@
   showstringspaces=false,
   showtabs=false,                  
   tabsize=2,
-  inputpath = codigo,
+  inputpath = código,
   postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
   breaklines = false,
   keywordstyle=[2]\color{codepurple},
@@ -133,7 +134,7 @@
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%
-        %CODE CONF%
+        %CODE CONF end%
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\Universidad}{Universitat Politècnica de València}
@@ -141,7 +142,7 @@
 \newcommand{\Facultad}{Escola Tècnica Superior d'Enginyeria Informàtica}
 \newcommand{\LogoFacultad}{Logo_etsinf}
 \newcommand{\Titulacion}{Grado en Ingeniería Informática}
-\newcommand{\titulo}{\scshape ST-LIB: librería de abstracción de microprocesadores STM32}
+\newcommand{\titulo}{\scshape ST-LIB: librería de abstracción de microcontroladores STM32}
 % Tipo de trabajo
 \newcommand{\tipotrabajo}{Trabajo de fin de grado}
 % Datos del autor
@@ -173,7 +174,7 @@
 \begin{abstract}
 \vspace{0.5cm}
 \par
-Este TFG tratara de documentar tanto el desarrollo como la funcionalidad de la librería ST-LIB para microprocesadores STM32, una librería desarrollada para la competición Hyperloop Week por parte de Hyperloop UPV. El propósito de la librería es abstraer lo máximo posible la implementación del código para las placas que usen microprocesadores STM32, y así reducir notablemente el tiempo y coste de desarrollo de infraestructuras que usen estas placas. \par 
+Este TFG tratara de documentar tanto el desarrollo como la funcionalidad de la librería ST-LIB para microcontroladores STM32, una librería desarrollada para la competición Hyperloop Week por parte de Hyperloop UPV. El propósito de la librería es abstraer lo máximo posible la implementación del código para las placas que usen microcontroladores STM32, y así reducir notablemente el tiempo y coste de desarrollo de infraestructuras que usen estas placas. \par 
 \vspace{0.5cm}
 Por su parte el propósito de este TFG sera servir como herramienta a generaciones futuras de Hyperloop y a potenciales usuarios externos para poder entender en profundidad los propósitos de la librería y sus capacidades, así como aprender a usarla rápidamente y tener un referente para futuros proyectos similares. \par 
 \vspace{0.5cm}
@@ -197,45 +198,134 @@ Palabras clave: ST-LIB, STM32, Hyperloop, ingeniería de computadores, desarroll
 \tableofcontents
 \newpage
 
+\section{Glosario de términos}
+\setlength{\parindent}{0cm}
+
+\textbf{anidar} Convocar llamadas a funciones o contener estructuras de datos dentro de otras funciones o estructuras
+\par \vspace{0.2 cm}
+\textbf{Capa} En referencia al código, agrupación de módulos que no dependen entre sí
+\par \vspace{0.2 cm}
+\textbf{Capa inferior} Agrupación de módulos de los cuales una capa superior depende
+\par \vspace{0.2 cm}
+\textbf{Capa superior} Agrupación de módulos que dependen únicamente de su capa inferior
+\par \vspace{0.2 cm}
+\textbf{casting} Anglicismo informático que significa transformar un tipo de variable a otro
+\par \vspace{0.2 cm}
+\textbf{cube} Acronimo de stm32cubeIDE
+\par \vspace{0.2 cm}
+\textbf{Dependencia} Expresión que indica que una instancia de código no puede funcionar sin la existencia de otra. 
+\par \vspace{0.2 cm}
+\textbf{EHW} European Hyperloop Week 
+\par \vspace{0.2 cm}
+\textbf{H7} Familia de microcontroladores de la serie STM32 sobre la que se ha diseñado y probado la librería ST-LIB
+\par \vspace{0.2 cm}
+\textbf{HAL} Hardware Abstraction Layer; librería para programar microcontroladores proveída por STMicroelectronics
+\par \vspace{0.2 cm}
+\textbf{HALAL} HAL Abstraction Layer; sinónimo de ST-LIB Core
+\par \vspace{0.2 cm}
+\textbf{IDE} Anglicismo de Entorno de desarrollo integrado
+\par \vspace{0.2 cm}
+\textbf{Microcontrolador} Circuito integrado programable
+\par \vspace{0.2 cm}
+\textbf{Nucleo} Pequeña placa comercial con un microcontrolador embebido proveída por STMicroelectronics
+\par \vspace{0.2 cm}
+\textbf{STM32} serie de microcontroladores de 32 bits fabricados por STMicroelectronics
+\par \vspace{0.2 cm}
+\textbf{stm32cubeIDE} IDE de programación de microcontroladores creado por STMicroelectronics
+\par \vspace{0.2 cm}
+\textbf{STMicroelectronics} empresa francesa fabricadora de microprocesadores y microcontroladores programables
+\par \vspace{0.2 cm}
+\textbf{ST-LIB} Conjunción de todas las capas que forman la líbreria
+\par \vspace{0.2 cm}
+\textbf{ST-LIB Core} Capa base de la ST-LIB
+\par \vspace{0.2 cm}
+\textbf{ST-LIB Low} Capa intermedia de la ST-LIB
+\par \vspace{0.2 cm}
+\textbf{ST-LIB High} Capa superior de la ST-LIB
+
+
+\setlength{\parindent}{15pt}
+\newpage
+
 \section{Objetivo del proyecto}
-El propósito principal de la librería es ayudar al desarrollo del vehículo de Hyperloop UPV para la competición de EHW (European Hyperloop Week). Para entender apropiadamente las razones por la que la desarrollamos y las decisiones que tomamos, primero habrá que explicar de forma resumida que es la EHW. \cite{web:EHW:homepage} \par \vspace{0.3 cm}
+El propósito principal de la librería es ayudar al desarrollo del vehículo del equipo Hyperloop UPV para la competición de EHW (European Hyperloop Week). Para entender apropiadamente las razones por la que la desarrollamos y las decisiones que tomamos, primero habrá que explicar de forma resumida que es la EHW. \cite{web:EHW:homepage} \par \vspace{0.3 cm}
 
 \subsection{EHW}
 La EHW es una competición internacional organizada por múltiples universidades europeas para promover el desarrollo de nuevas tecnologías así como animar a los estudiantes universitarios a meterse en el mundo de la investigación y a ponerse retos cada vez mayores. \par
 La competición se divide en dos partes. La primera es la fase de desarrollo, que cubre prácticamente todo el año escolar. Esta parte se basa en la entrega de múltiples documentos técnicos que describen el vehículo así como las nuevas tecnologías desarrolladas para este. La otra parte es la presentación, que sucede a mediados de Julio, durante una semana que da nombre a la competición. Aquí es cuando el trabajo de todo un año da su fruto, y se muestra el vehículo en funcionamiento y se le somete a varias pruebas para mostrar estas nuevas tecnologías que fueron documentadas en la primera parte. Al terminar la EHW queda recoger y comenzar un nuevo ciclo. \par \vspace{0.3 cm}
 Lo especial de esta competición es que la fase de desarrollo dura solamente un año. Además, aunque no sea obligatorio presentar un nuevo vehículo cada año, como el objetivo principal de la competición es la mejora y la innovación, es mas que recomendable. Al tener solo un año para preparar un vehículo funcional y que cumpla los requisitos de seguridad de la EHW, el tiempo es un recurso extremadamente importante. \par \vspace{0.3 cm}
-Debido a esto, hemos pensado en crear un código reusable, simple de usar, testeado y flexible. Este código es la librería ST-LIB. Su objetivo es, por tanto, ahorrar la mayor cantidad de tiempo al desarrollo de código para la electrónica del vehículo, al mismo tiempo que nos ofrece mayor seguridad al tener un código probado y perfilado decenas de veces. \par
-La {simplicidad} es necesaria para que los nuevos miembros no tengan que sufrir una curva de aprendizaje demasiado empinada, que perjudique su instrucción en la materia o incluso los lleve a abandonar el proyecto al ser abrumados por su dificultad. La {reusabilidad} servirá para que no tengamos que desarrollar una librería nueva cada año, y podamos dedicarnos en su lugar a expandirla y mejorarla. Por último necesitaremos que este {testeado} y sea {flexible} para evitar encontrarnos con fallos o necesidades no cubiertas en un futuro al trabajar con la librería. 
+Debido a esto, el equipo Hyperloop UPV se ha propuesto crear un código reusable, simple de usar, testeado y flexible. Este código es la librería ST-LIB. Su objetivo es, por tanto, ahorrar la mayor cantidad de tiempo al desarrollo de código para la electrónica del vehículo, al mismo tiempo que ofrece mayor seguridad al tener un código probado y perfilado decenas de veces. \par
+La {simplicidad} es necesaria para que los nuevos miembros no tengan que sufrir una curva de aprendizaje demasiado empinada, que perjudique su instrucción en la materia o incluso los lleve a abandonar el proyecto al ser abrumados por su dificultad. La {reusabilidad} servirá para evitar desarrollar una librería nueva cada año, y se pueda dedicar esos recursos en su lugar a expandirla y mejorarla. Por último se necesita que el código esté {testeado} y sea {flexible} para evitar encontrar fallos o necesidades no cubiertas en un futuro al trabajar con la librería. 
 
 \subsection{Uso externo}
 Inicialmente la ST-LIB estaba diseñada entorno a las necesidades del proyecto Hyperloop H8, y no se tenía en consideración prepararla para uso público. No obstante, a lo largo de la fase de diseño y desarrollo se fue viendo esta posibilidad cada vez mas factible, debido principalmente a las necesidades de diseño impuestas y a la versatilidad de la HAL; una macro librería de abstracción de la programación ensamblador para arquitecturas stm32 la cual funciona para todas las familias. \par
 
 Así pues se decidió hacer pública la ST-LIB a final de la competición. El público objetivo es principalmente equipos interesados en la metodología de desarrollo scrum con objetivo de sacar un producto funcional rapidamente. Grandes empresas con objetivos a largo plazo se encontraran con que la ST-LIB no corre código suficientemente rápido en comparación a hard-codear \footnote{Hacer código con el menor nivel de abstracción posible, poniendo la optimización por encima de cualquier otra propiedad del código}, lo cual requerirá procesadores más veloces, que desemboca en mayor coste de producción. El usuario potencial de esta librería son equipos pequeños o bien proyectos sin una cadena de producción; como lo son mocks funcionales, productos de diseño (creados para un único cliente), y herramientas de testeo para la propia empresa. 
+
+\subsection{Estado del arte}
+Se decidió crear la ST-LIB debido a que en el mercado actual las librerías de abstracción de microcontroladores esta orientado exclusivamente a proyectos a largo plazo de producción masiva. La razón de esto es la existencia de los microprocesadores, unidades de mayor potencia y costo diseñadas para manejar RTOS completos como lo son Linux, Windows y MacOS. \par
+Normalmente para proyectos rápidos con holgura económica se usan estos microprocesadores que actuan como pequeños ordenadores que corren scripts en lenguajes de programación de alto nivel; y para proyectos de largo plazo con objetivo de abaratar costos de producción se utilizan los microcontroladores con código compilado a lenguaje máquina. 
+\par \vspace{0.3cm}  
+
+
 \newpage
 
 \section{instalación y uso}
-En este apartado se explicara como instalar los programas necesarios para usar la librería, como utilizarla, que se puede configurar e incluso como modificarla por si fuese necesario adaptarla para otros microprocesadores de stm32 o se quisiera en algún futuro ampliarla. Este apartado no explica nada de la librería que no se puedan encontrar en otros apartados y su único propósito es facilitar la instalación y uso de esta. Si no se tiene interés en el uso directo de la librería, este apartado es opcional. 
+En este apartado se explicara como instalar los programas necesarios para usar la librería, como utilizarla, que se puede configurar e incluso como modificarla por si fuese necesario adaptarla para otros microcontroladores de stm32 o se quisiera en algún futuro ampliarla. Este apartado no explica nada de la librería que no se puedan encontrar en otros apartados y su único propósito es facilitar la instalación y uso de esta. Si no se tiene interés en el uso directo de la librería, este apartado es opcional. 
 
 \subsection{Git}
-Para poder instalar la librería hay dos opciones. La primera es ir al github de la ST-LIB y descargar una versión de entre las disponibles directamente, lo cual le dara un comprimido portable que puede descomprimir directamente en su workspace. La segunda es usar git para copiar el repositorio. Mientras que ambas opciones son válidas, es recomendable usar git para facilitar el manejo de versiones, ya que hara mas comodo cambiar entre estas e incluso crear un repositorio aparte para guardar la librería modificada con su propio historial de versiones.
+Para poder instalar la librería hay dos opciones. La primera es ir al github de la ST-LIB y descargar una versión de entre las disponibles directamente, lo cual le dara un comprimido portable que puede descomprimir directamente en su workspace. La segunda es usar git para copiar el repositorio. Mientras que ambas opciones son válidas, es recomendable usar git para facilitar el manejo de versiones, ya que hara mas cómodo cambiar entre estas e incluso crear un repositorio aparte para guardar la librería modificada con su propio historial de versiones.
 \par
 La instalación de Git es muy sencilla\cite{web:git:installationGit} y esta claramente explicada en su página\cite{web:git:installationGitHelp}. La única complicación que se puede dar es que en el caso de Windows no se añada al path correctamente, dependiendo del método de instalación elegido. Si se da el caso, en el buscador de windows escriba``Path'', abra ``Editar las variables de entorno del sistema'', vaya a la pestaña ``Opciones avanzadas'', seleccione ``variables de entorno'', elija ``PATH'', luego presione ``Editar'', se abrira una nueva ventana con varios botones, incluido el boton ``Nuevo''. Se aprieta este boton, y se escribe la dirección en la que se instaló Git. Si no se modificó el lugar de instalación, debería encontrarse en ``C{:}{\textbackslash}Program Files{\textbackslash}Git''. 
 \par \vspace{0.3 cm}
-Una vez se tiene instalado Git en el sistema operativo se puede usar la consola del susodicho para copiar el repositorio. Simplemente escriba en la consola cd ``path'' (donde path es la dirección donde se quiere copiar la librería, recomendable que se escoja el workspace de su editor de código), presione Enter, asegurese de que haya cambiado la dirección en la que se encuentra a ``path'', y use git clone \textit{https://github.com/HyperloopUPV-H8/ST-LIB.git} para copiar desde el repositorio remoto todo su contenido. Se recomienda también clonar el proyecto base, el cual ya tiene todas las configuraciones implementadas para correr la librería. Para esta use git clone \textit{https://github.com/HyperloopUPV-H8/template-project.git}. \par \vspace{0.3 cm}
+Una vez se tiene instalado Git en el sistema operativo se puede usar la consola del susodicho para copiar el repositorio. Simplemente escriba en la consola cd ``path'' (donde path es la dirección donde se quiere copiar la librería, recomendable que se escoja el workspace de su editor de código), presione Enter, asegurese de que haya cambiado la dirección en la que se encuentra a ``path'', y use git clone \textit{https://github.com/HyperloopUPV-H8/ST-LIB.git} \cite{web:github:STLIB} para copiar desde el repositorio remoto todo su contenido. Se recomienda también clonar el proyecto base, el cual ya tiene todas las configuraciones implementadas para correr la librería. Para esta use git clone \textit{https://github.com/HyperloopUPV-H8/template-project.git} \cite{web:github:templateproject}. \par \vspace{0.3 cm}
 Una vez se tenga instalado el repositorio para cambiar de versiones simplemente se usa el comando git checkout \textit{versión} para cambiar la versión de la librería. Una vez todo funcione, es libre de de seguir usando git o trabajar en archivos locales. Se recomienda que copie la instalación fuera de las carpetas git y trabaje en la copia para evitar eliminar todo su progreso en el código al cambiar de versión (git tiene una protección contra esto pero no te permitira cambiar la versión mientras esta protección este levantada)\par
-\subsection{}
+\subsection{IDE}
 
 
 \par
-La librería funciona tanto en Linux, como en Windows, y como en MacOS. En esta explicación nos centraremos en la instalación en Linux (mas recomendable) pero dejare enlaces y referencias a pasos a seguir para los otros sistemas operativos. 
+La librería funciona tanto en Linux, como en Windows, y como en MacOS. En esta explicación nos centraremos en la instalación en Linux (mas recomendable) pero la instalación es practicamente igual para cualquier sistema operativo.
 \par \vspace{0.3 cm}
-Lo primero que se debe hacer es instalar el programa de stm para la programación de microprocesadores. Este programa se llama stm32cubeIDE, y esta basado en eclipse, un programa de edición de código alternativo a Visual Studio especializado en programación de Java y C/C++. Al estar basado en eclipse, siempre que se quiera hacer algo en stm32cubeIDE que no sea estrictamente de los microcontroladores (como por ejemplo gestionar vinculación de librerías) se puede buscar documentación de eclipse directamente la cual es mucho mas abundante que la del cubeIDE. \par
-Para instalar el cubeIDE debemos ir a la pagina oficial de stm32 \cite{web:STM32:installationCube} y descargar un instalador para nuestro sistema operativo. Para Linux hay 3, uno para ubuntu \textit{(deb)}, uno para fedora \textit{(rpm)} y uno genérico. La versión en la que se trabajo la librería fue la 1.10.1, así que esta es la versión preferente. \par
+Lo primero que se debe hacer es instalar el programa de STMicroelectronics para la programación de microcontroladores. Este programa se llama stm32cubeIDE, y esta basado en eclipse, un programa de edición de código alternativo a Visual Studio especializado en programación de Java y C/C++. Al estar basado en eclipse, siempre que se quiera hacer algo en cube que no sea estrictamente de los microcontroladores (como por ejemplo gestionar vinculación de librerías) se puede buscar documentación de eclipse directamente la cual es mucho mas abundante que la del cube. \par
+Para instalar el cube debemos ir a la pagina oficial de stm32 \cite{web:STM32:installationCube} y descargar un instalador para nuestro sistema operativo. Para Linux hay 3, uno para ubuntu \textit{(deb)}, uno para fedora \textit{(rpm)} y uno genérico. La versión en la que se trabajo la librería fue la 1.10.1, así que esta es la versión preferente. \par
 Para ejecutar el instalador en nuestro sistema Linux debemos descomprimir el .zip con unzip, y luego deberemos ejecutar el .sh en la consola dentro de la carpeta donde se haya descomprimido, con el comando \textbf{sudo sh ./st-stm32cubeide\_\textit{tu versión}.sh}. Deberás aceptar las licencias de usuario y indicarle el directorio de instalación. Para Windows y MacOS en lugar de un comando por consola se puede simplemente ejecutar haciendo doble clic al archivo extraído. 
 \par \vspace{0.3 cm}
-Una vez instalado el cubeIDE deberás añadir la librería para poder usarla. Simplemente selecciona la opción de \textit{``Open projects from file system''}, introduce el directorio donde descargaste (o copiaste desde git) y dale a continuar. \par
 
-tendrás la opción de crear un proyecto nuevo desde cero, que te dejara seleccionar tu microprocesador y te construirá un .ioc con la configuración estándar para este, el cual tendrás que modificar a tu gusto. Aunque crear el proyecto desde cero y luego importar la librería sea posible llevara bastante tiempo debido a que habrá que configurar los periféricos en el .ioc y crear un archivo runes de configuración de la librería, así que para el caso de los microprocesadores stm32h7z23 existe ya un proyecto configurado que se puede importar usando git y la opción de abrir un proyecto desde un sistema de archivos. TODO
+Una vez instalado el cube deberás añadir la librería para poder usarla. Simplemente selecciona la opción de \textit{``Open projects from file system''}, introduce el directorio donde descargaste (o copiaste desde git) a traves del boton Directory... y dale a Finish como se muestra en el diagrama \ref{STLIBimport} \par \vspace{0.3 cm}
+
+\begin{figure}
+\includegraphics[scale=0.6]{Imagenes/Open Projects from File System.png}
+\includegraphics[scale=0.5]{Imagenes/importing ST-LIB.png}
+\caption{Imagenes de como importar la ST-LIB en el cube}
+\label{STLIBimport}
+\end{figure}
+
+tendrás la opción de crear un proyecto nuevo desde cero, que te dejara seleccionar tu microcontrolador y te construirá un .ioc con la configuración estándar para este, el cual tendrás que modificar a tu gusto. Aunque crear el proyecto desde cero y luego importar la librería sea posible llevara bastante tiempo debido a que habrá que configurar los periféricos en el .ioc y crear un archivo runes de configuración de la librería, así que para el caso de los microcontroladores H7 existe ya un proyecto configurado que se puede importar usando git y la opción de abrir un proyecto desde un sistema de archivos. \par \vspace{0.3 cm}
+
+Este proyecto se denomina template-project, y como se menciona en el apartado anterior, se puede descargar en su respectivo github \cite{web:github:templateproject}. Lo que contiene este proyecto es un .ioc configurado para funcionar con la ST-LIB, junto a módulos de la HAL modificados y un archivo runes que tiene múltiples periféricos de ejemplo listos para utilizar. \par
+El mayor defecto de la librería es que requiere de modificar los métodos de inicialización de los archivos generados automáticamente por el cube para que añada todos los periféricos como los desea el usuario lo cual aumenta mucho la complejidad de uso y puede lastrar el proceso de creación de código. Por ello se ha creado el template project con el propósito de ofrecer una versión utilizable directamente nada más se descarga, pero esta viene con sus propios problemas. Principalmente, la configuración de pines con la que viene es estática, así que si se usa otra familia o se quiere cambiar la función de un pin por cualquier razón, se debe modificar todos estos archivos obligatoriamente. \par
+Se ha intentado ofrecer todas las utilidades posibles en la configuración del template-project, pero mas adelante se vera un apartado de como modificarlo para cambiar configuraciones comunes. \par \vspace{0.3 cm}
+
+Ahora se deberá importar el template-project en el cube. Lo primero que se debe hacer si se le cambia el nombre al template-project es modificar el .project que se encuentra dentro de la carpeta del proyecto. Dentro de este archivo hay una línea que pone <name>, y ahi se deberá poner el nuevo nombre del proyecto exactamente igual. Si no se cambia, el cube simplemente no lo importará cuando se apriete al botón de importar. \par \vspace{0.3 cm}
+
+\includegraphics{Imagenes/cambios project.PNG}
+
+\par \vspace{0.3 cm}
+Además de el .project, la carpeta en la que se encuentra y el .ioc deben tener este nombre, y no se puede tener importado en el cube otro proyecto que se llame igual (o que tenga su .ioc o su <name> dentro del project igual). En cualquiera de estas situaciones, el cube no importará nada y no lanzará ningún error. Una vez todo se haya modificado para que coincida, se selecciona de nuevo la opción de \textit{``Open projects from file system''} y se importa de la misma forma que la ST-LIB. Si al importarlo no aparece en el workspace inmediatamente lo mas probable es que haya un error de los mencionados previamente.  
+\par \vspace{0.3cm}
+Una vez tanto la ST-LIB como el proyecto estan importados correctamente al workspace del cube queda tocar una última configuración antes de comenzar a programar. La ST-LIB está pensada para funcionar tanto en las nucleos comerciales como en placas diseñadas con un cristal de cuarzo externo. Esta configuración se ha de introducir al programa en tiempo de compilación, y como el cube usa su compilador interno para hacer esta tarea debe indicarsele en el propio proyecto las variables ambiente que se usan. 
+\par \vspace{0.3cm}
+Poniendo el cursor encima del proyecto ST-LIB importado, se pulsa el botón derecho del ratón, se selecciona \textit{``properties''}, y dentro de C/C++ general > Path and Symbols > Symbols se modifican tanto GNU C como GNU C++. En el primero se pone en HSE la frecuencia del timer global del microcontrolador deseado (para las nucleos de la familia H7 es 8000000MHz, y se escribe como 8000000UL) y se dejan los símbolos tanto de NUCLEO como de BOARD sin ningun valor asociado. En GNU C++ se deja solo el símbolo que represente la configuración deseada, NUCLEO para usar el cristal de cuarzo interno y BOARD para usar un cristal externo (timers HSI y HSE respectivamente). \par
+
+\begin{figure}[h]
+  \includegraphics[scale=0.45]{Imagenes/Modificar Simbolos ST-LIB.png}
+  \includegraphics[scale=0.45]{Imagenes/Modificar Simbolos ST-LIB++.png}
+  \caption{Ejemplo de configuración para una placa con cristal externo a máxima velocidad de un microcontrolador H7}
+  \label{configSTLIBenviroment}
+\end{figure}
+
+Luego se aplican las mismas modificaciones en el proyecto y ya estaría listo. Solo quedaría probar si los timers estan configurados correctamente, la forma mas facil de hacer esto es hacer que un LED conocido parpadee cada segundo usando el módulo timer y comprobar que efectivamente no parpadea ni demasiado lento ni demasiado rápido. 
+
 
 \newpage
 
@@ -304,7 +394,7 @@ Como añadido adicional, existen construidos ya todos los pines que hay disponib
 
 \subsubsection{DMA}
 El concepto de Direct Memory Access (DMA) viene de la necesidad en sistemas críticos de aliviar la carga del procesador. Como un porcentaje considerable del tiempo de ejecución es consumido gestionando los accesos a memoria y los datos recibidos a través de los periféricos, se decidió que seria mas efectivo crear una unidad especial de asistencia al procesador en estas acciones antes que gastar recursos en aumentar mas la potencia de este. \par \vspace{0.3 cm}
-DMA es entonces la abstracción del uso de un hardware especializado que puede conectarse directamente a la memoria para transferir datos por un bus. En un principio solo hacia un acto muy primitivo, mover datos de un lugar a otro, en un rango de memoria limitado con la opción de ciclar dentro de este rango de memoria o terminar su ejecución y requerir reconfigurarse cuando llenase el buffer. Sin embargo, viendo lo efectivo y barato que era implementar los DMA, con los años se fue añadiendo mas canales de direct memory access a los microprocesadores y se les dio mayor capacidad de calculo, permitiendo incluso aplicar cálculos simples o relegar funciones a otras unidades de hardware y esperar su respuesta para guardarla dentro de lugares de memoria mas específicos. 
+DMA es entonces la abstracción del uso de un hardware especializado que puede conectarse directamente a la memoria para transferir datos por un bus. En un principio solo hacia un acto muy primitivo, mover datos de un lugar a otro, en un rango de memoria limitado con la opción de ciclar dentro de este rango de memoria o terminar su ejecución y requerir reconfigurarse cuando llenase el buffer. Sin embargo, viendo lo efectivo y barato que era implementar los DMA, con los años se fue añadiendo mas canales de direct memory access a los microcontroladores y se les dio mayor capacidad de calculo, permitiendo incluso aplicar cálculos simples o relegar funciones a otras unidades de hardware y esperar su respuesta para guardarla dentro de lugares de memoria mas específicos. 
 \par \vspace{0.3 cm}
 Mientras que el uso de DMA no es necesario para hacer nada, aprovechar esta tecnología puede mejorar mucho la eficiencia de los procesos del micro al poder ceder decenas de lineas de código que gestionan información de forma iterativa de la unidad de proceso a las unidades de DMA especializadas. Por ello, se necesitaba una abstracción de los canales DMA en la librería para poder aumentar su eficiencia en todos los periféricos que pudiesen hacer uso de esta. \par \vspace{0.3 cm}
 El modelo de la DMA de la librería es bastante simplista, y deja mucha libertad y cosas por configurar a las clases de mayores niveles de abstracción ya que esta utilidad es aplicable a una plétora de casos y no es estrictamente necesaria para ninguno de estos. Se dedica a definir con enum los canales de DMA, usar un mapa para guardarse los canales libres y los canales usados, y ofrecer un método de inscripción de DMA que asigna el primer canal libre o permite, en su lugar, elegir al programador uno especifico. Luego tiene el método start() del que prácticamente todas las clases de la ST-LIB Core gozan y simplifica el inicio de estos servicios. 
@@ -319,7 +409,7 @@ Sin embargo, aunque no haga falta comprender el modelo Packets para poder usarlo
 Como se ha mencionado arriba, el modelo de paquetes debe ser capaz de almacenar cualquier tipo o tipos de variable, en cualquier tipo de combinación, y guardarlos como un objeto paquete. A nivel de programación, esto quiere decir que debe ser capaz de recibir como parámetro cualquier combinación de tipos de variable, traducirlos a un valor binario para poder enviarlas a través de cualquier protocolo de información, y luego poder traducir de vuelta ese valor binario a los tipos de variable indicados para cerrar el concepto de comunicación por paquetes. Se requiere entonces que sea un modelo template para poder recibir cualquier tipo de variable que se pueda traducir a binario \textit{(como a nivel de hardware todo esta traducido a binario, se sabe que cualquier variable tiene al menos una forma de traducirla a binario)}, y se requiere que pueda hacer pattern matching infinito pues de antemano se desconoce cuantos parámetros van a darle al paquete. \par \vspace{0.3 cm}
 Todos los métodos están sobrecargados para dos tipos de parámetros, o bien cualquier cantidad de parámetros mayor o igual que 1, o bien ningún parámetro. Este diseño esta hecho a propósito para poder definir las funciones de los métodos como series geométricas, con su caso base (0 parámetros) y luego el caso de n parámetros. Al igual que las series geométricas, una función se define por una cantidad de operaciones más la misma función pero de n-1 valor (o parámetros, en este caso). Así, un paquete de 4 parámetros se define por la traducción del primer parámetro mas la definición de un paquete que contenga los otros tres parámetros. Se traduce el primer parámetro, y se convoca un paquete con tres parámetros que traduce el primero de sus parámetros y convoca a un paquete con dos parámetros. Así hasta llegar a 0 parámetros, donde se retorna el valor base (que es nada, pues el paquete esta vacío) y cuando termina su convocación el paquete de un parámetro concatena su traducción a la del paquete de 0 parámetros, y termina también la convocación del paquete de un parámetro, llegando a hacer una cadena recursiva desde los parámetros requeridos hasta 0 y de vuelta a los parámetros requeridos. Básicamente estos templates permiten hacer declaraciones recursivas en tiempo de compilación (luego en tiempo de ejecución también deberán hacerse convocaciones recursivas debido a que la palabra clave inline no funciona con los templates, pero solo sera necesario en la construcción del paquete y en las traducciones)
 \par \vspace{0.3 cm}
-Ahora pasaremos a explicar como maneja los castéos de las variables a binario. Aunque todas las variables tengan al menos una forma de transformarse a binario, esto no quiere decir que esta forma este codificada para el uso del programa o que sea la forma de castéo mas sencilla y eficiente. Por ello, la clase PacketValue sirve de soporte para la clase Packet y maneja los posibles valores que puede recibir como parámetros dependiendo de algunas propiedades que puedan requerir. Esta es una estructura de tipos que define grupos de tipos y dependiendo de a que tipo pertenezcan usa un método de traducción u otro. Los separadores de grupos definidos son isContainer y isIntegral, generando los grupos Container, Integral y CustomButNotContainer. Los que pertenecen al tipo isIntegral tienen una traducción directa a binario dada por C que esta demostrada ser la mas efectiva. Los que pertenecen a isContainer quiere decir que en verdad guarda mas de una única variable, como una array, un mapa o un paquete (ofreciendo la opción de nestear paquetes dentro de paquetes). 
+Ahora pasaremos a explicar como maneja los cast de las variables a binario. Aunque todas las variables tengan al menos una forma de transformarse a binario, esto no quiere decir que esta forma este codificada para el uso del programa o que sea la forma de cast mas sencilla y eficiente. Por ello, la clase PacketValue sirve de soporte para la clase Packet y maneja los posibles valores que puede recibir como parámetros dependiendo de algunas propiedades que puedan requerir. Esta es una estructura de tipos que define grupos de tipos y dependiendo de a que tipo pertenezcan usa un método de traducción u otro. Los separadores de grupos definidos son isContainer y isIntegral, generando los grupos Container, Integral y CustomButNotContainer. Los que pertenecen al tipo isIntegral tienen una traducción directa a binario dada por C que esta demostrada ser la mas efectiva. Los que pertenecen a isContainer quiere decir que en verdad guarda mas de una única variable, como una array, un mapa o un paquete (ofreciendo la opción de anidar paquetes dentro de paquetes). 
 \par \vspace{0.3 cm}
 
 \subsubsection{Periféricos básicos: Analog y Digital}
@@ -340,9 +430,9 @@ while(1){
 }
 \end{lstlisting}
 \par \vspace{0.3 cm}
-Se recomienda utilizar el HALAL start en lugar de usar los starts de los módulos ya que algunos módulos dependen de que otros hayan iniciado y tienen que activarse en un orden en concreto. Por ejemplo, el módulo ADC usa las DMA para capturar los valores sin usar capacidad de procesador para mejorar la velocidad del codigo, pero tiene el pequeño defecto de no funcionar si las DMA no 
+Se recomienda utilizar el HALAL start en lugar de usar los starts de los módulos ya que algunos módulos dependen de que otros hayan iniciado y tienen que activarse en un orden en concreto. Por ejemplo, el módulo ADC usa las DMA para capturar los valores sin usar capacidad de procesador para mejorar la velocidad del código, pero tiene el pequeño defecto de no funcionar si las DMA no 
 \par \vspace{0.3 cm}
-Aparte de estos tres sensores esta el EXTI (External Interrupt) que permite activar interrupciones directamente a partir de cableado. El EXTI es mas especial porque le puedes especificar que es lo que tiene que hacer cuando sea interrumpido a traves de una \textit{lambda expression}. Las lambda son basicamente funciones sin identificador, que se define por su clausula de captura de parametros, los parametros que recibe, y el codigo a ejecutar. 
+Aparte de estos tres sensores esta el EXTI (External Interrupt) que permite activar interrupciones directamente a partir de cableado. El EXTI es mas especial porque le puedes especificar que es lo que tiene que hacer cuando sea interrumpido a traves de una \textit{lambda expression}. Las lambda son basicamente funciones sin identificador, que se define por su clausula de captura de parametros, los parametros que recibe, y el código a ejecutar. 
 \begin{lstlisting}
 uint8_t externalID = ExternalInterrupt::inscribe(PA5,()[]{printf("Hola");},FALLING);
 HALAL::start();
@@ -370,7 +460,7 @@ Ademas de la clase PWM, el módulo tiene tres clases que heredan de ella que añ
 Con este código hemos puesto dos pwm negadas entre si en un duty cycle del 40\%, una frecuencia de 1 Hz, y una fase del 30\% (+pi*0.3 de fase angular). Como se puede comprobar operar las PWM se ha vuelto mucho mas sencillo ya que el módulo gestiona automaticamente toda la configuración de software.  
 
 \subsubsection{Time}
-La clase time incluye la gestión de los timers, las alarms, y el rtc (\textit{real time clock}). Como hay una cantidad limitada de timers en el microprocesador y algunos de estos son necesarios para hacer funcionar otros módulos como las PWM, en su lugar se utilizan tres timers generales para que gestionen la gran mayoría de las alarmas y una interfaz con los timers restantes en caso de querer una alarma crítica. \par
+La clase time incluye la gestión de los timers, las alarms, y el rtc (\textit{real time clock}). Como hay una cantidad limitada de timers en el microcontrolador y algunos de estos son necesarios para hacer funcionar otros módulos como las PWM, en su lugar se utilizan tres timers generales para que gestionen la gran mayoría de las alarmas y una interfaz con los timers restantes en caso de querer una alarma crítica. \par
 Los timers generales low y mid estan configurados para crear una interrupción cada 50 microsegundos y cada milisegundo, respectivamente. Luego de saltar la interrupción comprueba si las condiciones de las alarmas configuradas por el usuario se han cumplido, si es el caso ejecuta la lambda expression que le corresponde y en caso contrario la ignora. Un ejemplo de configuración:
 \begin{lstlisting}
   uint64_t counter = 0;
@@ -383,15 +473,15 @@ Este código sumara cada 100 microsegundos +1 al contador y lo imprimirá cada 1
 Otro problema del mid precision timer es que requiere del timer23 de la placa; y dependiendo de el código que estes implementando puedes necesitar el timer23 para declarar PWMs en algunos pines. En el caso de la familia H7 hay 4 timers de 32 bits (el 2, el 5, el 23 y el 24). El 24 se usa para el global timer, y el 2 y el 5 estan asignados para high precision timers. Si declaras los pines que usan el timer 23 para el PWM y utilizas el mid precision timer el iniciador del timer dara un error avisando de que no puede usarse el reloj para ambas cosas, pero se debe tener en cuenta a la hora de estructurar una placa. También se puede cambiar el Runes si tu núcleo específica permite otra configuración, pero eso se tratará en su respectivo apartado. Como última medida se podría modificar el módulo time para usar uno de los relojes de los high precision timers y darselo al mid precision time, pero esto dejaría a la núcleo con solo un timer de precisión crítica \par \vspace{0.3 cm} 
 Además de los timers de propósito general estan los ya mencionados global timer y RTC. Estos sirven para mantener una cohesión temporal dentro del propio código; del orden de segundos y años respectivamente. Todos los timers tienen un valor máximo antes de que hagan overflow en su contador y vuelvan a 0. Esto permite por un lado tener un activador por hardware para interrupciones sin necesidad de implementar circuitería que aumente el precio (el bit de overflow). Pero por otro lado hace que se pierda toda la información sobre el tiempo que ha pasado cuando este timer sufre overflow. Si han pasado 2 segundos o 1 mes es indistinguible para el timer, ambos son un valor de 0 hasta $2^{32}$, en periodos de reloj. Esto para cálculos temporales y comunicaciónes es un gran problema, pues suelen requerir estos valores para poder funcionar. Por ello se usan estos dos timers, cuyos plazos de overflow son mucho mayores para poder trabajar con ellos. \par 
 El global timer guarda en nano segundos el tiempo que ha pasado desde que se inició, y tiene una capacidad de overflow de 16.84 segundos ($(2^{32})/(2,55·10^8)$, que son el rango de su contador y su frecuencia). Lo bueno de este reloj es su gran precisión para calculos críticos y su cercanía al hardware. Lo único malo es que los propios calculos deben implementar su control de overflow (hay un ejemplo con el encoderSensor en la ST-LIB LOW, que lo usa) y que solo funciona para calculos que trabajen en un rango de tiempo que no alcance las decenas de segundos. Si se quiere usar para estampas de tiempo mas altas deberá hacerse un contador por encima que controle cuantas veces se ha hecho overflow, además de que su drift de reloj puede comenzar a acumularse. \par \vspace{0.3cm}
-El RTC (Reloj de tiempo real o Real Time Clock) es un reloj que guarda estampas de tiempo en el formato de fechas. Contiene contador (que se puede traducir a milisegundos), segundos, minutos, horas, dia, mes y año; y su capacidad hasta el overflow es de 99 años, ya que tiene 8 bits alocados para guardar el año en BDC \footnote{BDC o Binary Coded Decimal es un formato alternativo a la int en el que se usan cuatro bits para expresar cada cifra de un numero, haciendo que se escriba igual en decimal que en hexadecimal. Así por ejemplo, 13 se escribe 1101 0x0C en binario y 0001 (1) 0011 (3) o 0x13 en BDC. }. El RTC se puede configurar para que use un generador de señales externo, para usar el cristal de cuarzo interno del micro, o para usar cualquiera de los 24 relojes como su generador de señales de reloj. De base esta configurado en la librería para usar el cristal de cuarzo ya que tiene un desfase y un drift conocidos y documentados para todos los microprocesadores de la familia. \par 
+El RTC (Reloj de tiempo real o Real Time Clock) es un reloj que guarda estampas de tiempo en el formato de fechas. Contiene contador (que se puede traducir a milisegundos), segundos, minutos, horas, dia, mes y año; y su capacidad hasta el overflow es de 99 años, ya que tiene 8 bits alocados para guardar el año en BDC \footnote{BDC o Binary Coded Decimal es un formato alternativo a la int en el que se usan cuatro bits para expresar cada cifra de un numero, haciendo que se escriba igual en decimal que en hexadecimal. Así por ejemplo, 13 se escribe 1101 0x0C en binario y 0001 (1) 0011 (3) o 0x13 en BDC. }. El RTC se puede configurar para que use un generador de señales externo, para usar el cristal de cuarzo interno del micro, o para usar cualquiera de los 24 relojes como su generador de señales de reloj. De base esta configurado en la librería para usar el cristal de cuarzo ya que tiene un desfase y un drift conocidos y documentados para todos los microcontroladores de la familia. \par 
 El RTC esta pensado principalmente para hacer estampas de tiempo en comunicación entre placas o con clientes externos, y es especialmente útil ya que se puede sincronizar con otros agentes a traves del protocolo ntp directamente. El rtc se inicia automaticamente con el st-lib start y esta pensado para actualizarse usando ntp, pero tiene un método set rtc para que se actualice desde código si la conexión por ethernet no es posible.
 
 \subsubsection{CORDIC}
-El módulo CORDIC es una librería que aprovecha la unidad de calculo interna con el mismo nombre. Es una librería de aceleración de calculo trigonométrico la cual supera incluso a la librería arm math hecha para calculo por estimación en arquitecturas de microprocesadores. La razón por la que esta pequeña unidad la supera es porque esta diseñada específicamente para aplicar el algoritmo de Volder, especializado en funciones trigonométricas e hiperbólicas. \par
-La mayoría de las familias de microprocesadores STM incluyen la unidad de aceleración CORDIC, pero si el micro no lo incluye esta librería no funcionara y se deberá desactivar el módulo dentro de la HAL (normalmente si tu microprocesador no tiene CORDIC la flag de CORDIC MODULE esta ya desactivada, apareciendo el código dentro de los ifdef en grís).
+El módulo CORDIC es una librería que aprovecha la unidad de calculo interna con el mismo nombre. Es una librería de aceleración de calculo trigonométrico la cual supera incluso a la librería arm math hecha para calculo por estimación en arquitecturas de microcontroladores. La razón por la que esta pequeña unidad la supera es porque esta diseñada específicamente para aplicar el algoritmo de Volder, especializado en funciones trigonométricas e hiperbólicas. \par
+La mayoría de las familias de microcontroladores STM incluyen la unidad de aceleración CORDIC, pero si el micro no lo incluye esta librería no funcionara y se deberá desactivar el módulo dentro de la HAL (normalmente si tu microcontrolador no tiene CORDIC la flag de CORDIC MODULE esta ya desactivada, apareciendo el código dentro de los ifdef en grís).
 \par \vspace{0.3cm}
-Una de las peculiaridades del CORDIC es que solo funciona con lógica binaria; es decir, no acepta coma flotante (ni floats ni doubles). El módulo CORDIC ya viene con un metodo que transforma las float (en radianes) a int32 en el formato que el CORDIC recibe. Sin embargo, no se recomienda abusar de este método ya que la transformación de int a float consume muchos recursos desde el punto de vista de la optimización, haciendo que vaya mas lento incluso que la librería math arm con lógica de floats, lo cual le quita el sentido a usar el módulo CORDIC en primer lugar. \par
-Por ello CORDIC solo se puede usar de forma eficiente si tienes tres o mas operaciones trigonométricas consecutivas que aplicar a un valor antes de tener que recastearlo o si se usa lógica binaria en todo el código conectado a los cálculos trigonométricos. El primer caso se vería así:
+Una de las peculiaridades del CORDIC es que solo funciona con lógica binaria; es decir, no acepta coma flotante (ni floats ni doubles). El módulo CORDIC ya viene con un metodo que transforma las float (en radianes) a int32 en el formato que el CORDIC recibe. Sin embargo, no se recomienda abusar de este método ya que la transformación de int a float consume muchos recursos desde el punto de vista de la optimización (estamos hablando a nivel de ciclos de reloj), haciendo que vaya mas lento incluso que la librería math arm con lógica de floats, lo cual le quita el sentido a usar el módulo CORDIC en primer lugar \footnote{hay que añadir que la familia H7 es la mas potente de todas las familias, y la unidad CORDIC interna es la misma para todas las familias y su cálculo independiente del reloj del microcontrolador. Esto quiere decir CORDIC sera más útil para otras familias y este módulo podría superar math arm incluso con recasting continuo en estas (porque un ciclo de reloj toma mas tiempo y por ende CORDIC necesita menos ciclos de reloj para hacer la operación)}. \par
+Por ello CORDIC solo se puede usar de forma eficiente si tienes tres o mas operaciones trigonométricas consecutivas que aplicar a un valor antes de tener que volverlo a transformar o si se usa lógica binaria en todo el código conectado a los cálculos trigonométricos. El primer caso se vería así:
 \begin{lstlisting}
 double angle = pi * 0.5;
 int32_t unary = RotationComputer::radian_f32_to_q31(angle); 
@@ -434,7 +524,7 @@ El módulo encoder se encarga de transformar estos codificadores relativos en un
 \par \vspace{0.3cm}
 Este código declara que el encoder esta conectado a los pines PE0 y PG1, lo enciende y lee de forma continua tanto la posición como la dirección a la que fue la última rotación. Tener en cuenta que el encoder comienca su contador en 32768 para que comience lo mas lejos posible del overflow y el underflow, debido a que dependiendo de la dirección puede sufrir uno u otro. En los calculos que se hagan se ha de tener en cuenta que esta es la posición inicial del encoder. Además, si se tiene pensado usar en largas distancias se recomienda añadir lógica en caso de overflow (y undeflow). En la ST-LIB Low ya se añaden todas estas abstracciones.
 \subsubsection{Flash}
-La mayoría de la memoria del microcontrolador es volátil, lo cual quiere decir que su información es destruida cuando la núcleo se reinicia o deja de alimentarse. Sin embargo, la mayoría de los microprocesadores, incluyendo todos los de la familia H7, tienen una pequeña memoria flash de 1 MB donde se puede guardar información no volátil como el bootloader, el código y variables o información generada durante el cómputo. \par
+La mayoría de la memoria del microcontrolador es volátil, lo cual quiere decir que su información es destruida cuando la núcleo se reinicia o deja de alimentarse. Sin embargo, la mayoría de los microcontroladores, incluyendo todos los de la familia H7, tienen una pequeña memoria flash de 1 MB donde se puede guardar información no volátil como el bootloader, el código y variables o información generada durante el cómputo. \par
 El módulo de la flash tiene como propósito manejar esta memoria de la forma mas directa y simple posible. Tiene tres métodos: Read, Write y Erase. Los dos primeros reciben una posición de memoria inicial, un puntero con o bien los datos a escribir o el lugar donde se guardaran los datos leídos, y el tamaño de la lectura o escritura (cuantos bytes se va a leer). Erase por su lado simplemente recibe la posición inicial y la final y borra todo de por medio. \par \vspace{0.3cm}
 La flash se divide en páginas de 128 kB, y para escribir se debe acceder a una página de la flash en modo escritura, y cuando se accede de esta manera la memoria es borrada para poder escribir la nueva información. Para solventar esto simplemente se hace una lectura antes de la escritura, se anexiona la parte de la memoria que no se va a escribir al buffer de escritura, y se escribe toda la página.
 \subsection{ST-LIB Communication}
@@ -447,9 +537,9 @@ UART es el protocolo de comunicación mas sencillo que implementa la librería. 
 
 \section{Testeo y profiling de la librería}
 \subsection{Testing automático}
-Durante la fase de desarrollo y parte de la fase de testeo se preparo una herramienta especial para poder hacer pruebas continuas a la librería conocida como la ATP (\textit{Automatic Testing Platform}). La ATP se divide en una pieza de hardware especializada que emula múltiples señales utilizadas en casos de uso reales denominada SHUTP y una OrangePi 5 con ubuntu como RTOS\footnote{RTOS se refiere a Real Time Operating System, o sistema operativo, en el contexto de los microprocesadores} que hace de servidor para recibir los test a probar y enterarse de las pull-request abiertas en GitHub de las cuales obtener el código, a la cual simplemente denominaremos OrangePi. \par \vspace{0.3cm}
+Durante la fase de desarrollo y parte de la fase de testeo se preparo una herramienta especial para poder hacer pruebas continuas a la librería conocida como la ATP (\textit{Automatic Testing Platform}). La ATP se divide en una pieza de hardware especializada que emula múltiples señales utilizadas en casos de uso reales denominada SHUTP y una OrangePi 5 con ubuntu como RTOS\footnote{RTOS se refiere a Real Time Operating System, o sistema operativo, en el contexto de los microcontroladores} que hace de servidor para recibir los test a probar y enterarse de las pull-request abiertas en GitHub de las cuales obtener el código, a la cual simplemente denominaremos OrangePi. \par \vspace{0.3cm}
 
-La SHUTP se compone de una placa con 400 pin outs\footnote{Los pin outs son unas conexiones de circuitería que permiten conectar un componente específico de una placa con cualquier componente externo} que hace de montura para dos núcleos emuladoras y un microprocesador (\textit{que puede estar en una núcleo o en una placa personalizada}). Las núcleos emuladoras tienen un código fijo que puede recibir señales del microprocesador a testear y que dadas las señales que reciben trataran de simular una batería de periféricos para los que la librería fue planteada. \par
+La SHUTP se compone de una placa con 400 pin outs\footnote{Los pin outs son unas conexiones de circuitería que permiten conectar un componente específico de una placa con cualquier componente externo} que hace de montura para dos núcleos emuladoras y un microcontrolador (\textit{que puede estar en una núcleo o en una placa personalizada}). Las núcleos emuladoras tienen un código fijo que puede recibir señales del microcontrolador a testear y que dadas las señales que reciben trataran de simular una batería de periféricos para los que la librería fue planteada. \par
 Las señales que las emuladoras reciban servirán para indicar que periféricos se quieren simular y para imitar las señales que reciben los periféricos seleccionados. Estos periféricos incluyen: Todos los protocolos de comunicación, un motor lineal con su encoder, sensores de temperatura y presión, válvulas, pwm, y otras núcleos con sus propios procesos. \par
 En cuanto a el micro a testear, esta pensado para recibir el código a probar desde el bootloader, que deberá incluir todas las comunicaciónes necesarias para el debugging y las señales para activar las núcleos emuladoras en los periféricos que se deseen probar en susodicho código. La SHUTP se diseño para poder ser usada tanto en La ATP como fuera de esta, pero para el caso de la ATP esta tendrá montada una núcleo en la conexión de la micro a testear y todas las comunicaciónes con la OrangePi se harán a partir del bus PCAN\footnote{PCAN es un protocolo de comunicación productor/consumidor donde los primeros responden a las peticiones del segundo.}.
 \par \vspace{0.3cm}

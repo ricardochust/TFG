@@ -35,6 +35,16 @@ L.~Torvalds, ``Instalador de git,'' 2023. [Online]. Available: \url{https://git-
 ------, ``Como instalar git,'' 2023. [Online]. Available: \url{https://git-scm.com/book/en/v2/Getting-Started-Installing-Git}
 \BIBentrySTDinterwordspacing
 
+\bibitem{web:github:STLIB}
+\BIBentryALTinterwordspacing
+H.~UPV, ``St-lib,'' 2023. [Online]. Available: \url{https://github.com/HyperloopUPV-H8/ST-LIB.git}
+\BIBentrySTDinterwordspacing
+
+\bibitem{web:github:templateproject}
+\BIBentryALTinterwordspacing
+------, ``template-project,'' 2023. [Online]. Available: \url{https://github.com/HyperloopUPV-H8/template-project.git}
+\BIBentrySTDinterwordspacing
+
 \bibitem{web:STM32:installationCube}
 \BIBentryALTinterwordspacing
 STMicroelectronics, ``Pagina de instalación del {stm32CubeIDE},'' 2023. [Online]. Available: \url{https://www.st.com/en/development-tools/stm32cubeide.html}
