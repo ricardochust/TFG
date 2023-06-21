@@ -170,6 +170,8 @@
 \large
 \renewcommand*\thesection{\arabic{section}}
 \setcounter{section}{0}
+\interfootnotelinepenalty=10000
+
 
 \begin{abstract}
 \vspace{0.5cm}
@@ -310,7 +312,7 @@ Para ejecutar el instalador en nuestro sistema Linux debemos descomprimir el .zi
 
 Una vez instalado el cube deberás añadir la librería para poder usarla. Simplemente selecciona la opción de \textit{``Open projects from file system''}, introduce el directorio donde descargaste (o copiaste desde git) a traves del boton Directory... y dale a Finish como se muestra en el diagrama \ref{STLIBimport} \par \vspace{0.3 cm}
 
-\begin{figure}
+\begin{figure}[h]
 \includegraphics[scale=0.6]{Imagenes/Open Projects from File System.png}
 \includegraphics[scale=0.5]{Imagenes/importing ST-LIB.png}
 \caption{Imagenes de como importar la ST-LIB en el cube}
@@ -343,6 +345,172 @@ Poniendo el cursor encima del proyecto ST-LIB importado, se pulsa el botón dere
 
 Luego se aplican las mismas modificaciones en el proyecto y ya estaría listo. Solo quedaría probar si los timers estan configurados correctamente, la forma más facil de hacer esto es hacer que un LED conocido parpadee cada segundo usando el módulo timer y comprobar que efectivamente no parpadea ni demasiado lento ni demasiado rápido. 
 
+\subsection{Comenzando a usar la librería}
+
+Una vez se tiene instalada la librería y se ha descargado el project template (o alternativamente se ha hecho un proyecto propio que importe la librería), toca configurar la librería para poder utilizarla dependiendo de las necesidades de cada usuario. \par \vspace{0.3cm}
+
+Lo primero que se ha de hacer para usar la librería si no se va a usar los módulos de comunicación Ethernet es desactivarlos. Estos módulos tienen grandes utilidades; pero ocupa varios pines, puede ralentizar la ejecución de la placa en el orden de microsegundos, y puede ser bastante aparatoso. \par
+El caso es que el módulo Ethernet se encarga por si mismo de gestionar y proteger la comunicación, y una de las protecciones es \textbf{no activar la placa hasta que el bus Ethernet se establezca correctamente}. Por ello, si no se va a usar, se debe o comentar dentro de los métodos HALAL::start() y ST-LIB::update() todas sus apariciones (dos en start + una en update); o alternativamente desactivar el módulo como se mostrará en el próximo sub-apartado. 
+
+\subsubsection{Activar y desactivar módulos}
+Los módulos se activan y desactivan a partir de los \textit{define} de la HAL, la librería sobre la que la ST-LIB se basa. Con ello se evita que esté funcionando el módulo en la HAL sin estar activo en la ST-LIB y viceversa. 
+\par \vspace{0.3cm}
+
+Para desactivarlos se debe ir dentro del proyecto a los archivos \textit{include}\footnote{la carpeta de archivos que en la mayoría de proyectos C / C++ contiene los header files} a un archivo llamado stm32h7xx\_hal\_conf.h\footnote{Si no se está usando la familia H7, este archivo tendra en el nombre la familia que se este usando en su lugar; ej. stm32f3xx\_hal\_conf.h para la familia F3} y simplemente comentar o descomentar los \textit{define MODULE\_ENABLED} del módulo que se desee activar o desactivar. 
+\par \vspace{0.3cm}
+
+Por ejemplo, el módulo Ethernet de la HAL \textit{HAL\_ETH\_MODULE\_ENABLED} se encuentra dentro del project\_template en la linea 48 de stm32h7xx\_hal\_conf.h, y viene descomentado de base. Este es el mas común que se va a querer activar o desactivar pues es una gran herramienta pero puede impedir el correcto funcionamiento de la placa si no se esta utilizando. Simplemente se ponen dos barras justo detras suya para comentarlo y ya esta desactivado.
+
+\subsubsection{Configurar Pins y Runes}
+Al usar la ST-LIB puede requerirse reconfigurar los pines si las opciones ofrecidas de base por el project template son insuficientes. Además, si se hace un proyecto desde cero, se necesitara configurar un archivo Pins.hpp y un archivo Runes.hpp para que la ST-LIB funcione correctamente. 
+\par \vspace{0.3cm}
+Configurar Pins es bastante sencillo, se crea un objeto Pin que indique el puerto y pin adecuado (siendo el puerto la letra y el pin el número); y si se requiere darle una funcionalidad alternativa se indica además en su constructor esta funcionalidad alternativa. 
+\par
+La funcionalidad alternativa es una configuración que se le da a los pines cuando se quiere utilizar utilidades especiales que no entren en el uso de perifericos básicos (INPUT, OUTPUT, ANALOG, EXTI, o NOT\_USED). 
+\par
+Lo que pueda hacer cada Pin con estas funcionalidades depende de la placa que se este usando, y por tanto requiere de revisar el datasheet del microcontrolador que se esté usando. Por ejemplo no todos los pines pueden hacer de PWM. El project template ya viene con una configuración ejemplo en el que se da todas las opciones para la familia H7, pero si se quiere usar otra familia u otra configuración se debe revisar el datasheet para poder usar las funciones alternativas. \par \vspace{0.3cm}
+Como un pequeño indicador para la familia H7; AF0 y AF15 son control de sistema, AF11 son Ethernet, AF14 es UART, y el resto son timers (principalmente para PWM) y otros protocolos de comunicación. A continuación, un pequeño extracto de project template para que se vea como se declaran los pines: 
+\begin{figure}[h]
+\begin{lstlisting}
+  Pin PE2(PORT_E, PIN_2);
+  Pin PE3(PORT_E, PIN_3);
+  Pin PE4(PORT_E, PIN_4, AF4);
+  Pin PE5(PORT_E, PIN_5, AF4);
+  Pin PE6(PORT_E, PIN_6, AF4);
+  Pin PC13(PORT_C, PIN_13);
+  Pin PF0(PORT_F, PIN_0, AF13);
+  Pin PF1(PORT_F, PIN_1, AF13);
+  Pin PF2(PORT_F, PIN_2, AF13);
+  Pin PF3(PORT_F, PIN_3, AF13);
+\end{lstlisting}
+\caption{Ejemplo de configuración de Pins.hpp extraido de project template}
+  \label{PinsConfFile}
+\end{figure}
+\par \vspace{0.3cm}
+En cuanto al Runes.hpp, ahi se deberán declarar tanto los \textit{handlers} de la HAL necesarios como las instancias de los periféricos que luego usarán los métodos \textit{inscribe} de cada módulo. Lo mejor para hacer esto es comenzar desde arriba e ir hacia abajo. \par \vspace{0.3cm}
+Como ejemplo, se quiere crear una nueva instancia de UART que utilice los pines PB6 y PB7 para comunicarse. Para ello primero se ha de mirar que valores contiene la estructura de instancia UART. Esto se puede ver o bien con el asistente de código de él cube (presionando Ctrl + espacio), o abriendo el header de UART. \ref{UARTinstancestruct}
+\begin{figure}[H]
+  \begin{lstlisting}
+    struct Instance{
+      Pin TX; /**< Clock pin. */
+      Pin RX; /**< MOSI pin. */
+      UART_HandleTypeDef* huart;  /**< HAL UART struct. */
+      USART_TypeDef* instance;
+      uint32_t baud_rate;
+      uint32_t word_length;
+      bool receive_ready = false; /**< Receive value is ready to use pin. */
+      bool initialized = false;
+
+  };
+  \end{lstlisting}
+  \caption{Estructura de instancia de UART}
+    \label{UARTinstancestruct}
+  \end{figure}
+  \par \vspace{0.3cm}
+Dentro del header del UART se puede ver que requiere ambos pines que se van a usar (PB6 y PB7, estos se deberán declarar con la función alternativa UART como se explicó anteriormente en este apartado), un \textit{handler} de la HAL; una instancia de la HAL, una variable denominada baud\_rate (que define la velocidad a la que queremos comunicarnos, en bits por segundo) y otra variable word\_length (que define el tamaño de palabra, se recomienda usar los \textit{enum} de UART\_WORDLENGTH pues definen todos los valores posibles para este protocolo) \par \vspace{0.3cm}
+Para los \textit{handlerTypeDef} basta con declararlos sin definirlos al principio del documento Runes.hpp 
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    #pragma once
+    #include "Pins.hpp"
+
+    UART_HandleTypeDef huart1;
+  \end{lstlisting}
+  \caption{Ejemplo de donde podría ir un handler}
+    \label{UARThandlerdeclaration}
+  \end{figure}
+  \par \vspace{0.3cm}
+  
+En cuanto a los TypeDef normales suelen estar ya declarados con el mismo nombre más un número. Lo mejor es usar los que ya vienen con la librería HAL pues existen tantos como la placa que se este usando puede configurar. Asumiendo que se desea un baud rate de 9600 y un tamaño de palabra de 64 bits la configuración sería como en la figura \ref{UARTinstanceRunes}
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    UART::Instance UART::instance5 = { .TX = PB6, .RX = PB7, .huart = &huart1,
+    .instance = USART1, .baud_rate = 9600, .word_length = UART_WORDLENGTH_64B,
+    };
+  \end{lstlisting}
+\caption{Ejemplo de declarar en el Runes.hpp una nueva instancia}
+\label{UARTinstanceRunes}
+\end{figure}
+\par \vspace{0.3cm}
+
+Cual \textit{handler} y cual instancia de UART escoger depende de como esten conectados los pines en el microcontrolador, así que será necesario mirar en el datasheet para los pines específicos a que UART están conectados. Alternativamente se puede abrir el .ioc para ver que opciones tiene el pin; pero se recomienda no modificarlo o si no este generará código nuevo pisando el código que se tuviese anteriormente. 
+\par 
+Si los pines no estan conectados al mismo UART o uno de los dos no está conectado a ninguno, no se podrán utilizar (es una limitación de hardware).  
+\par \vspace{0.3cm}
+Una vez se tiene la instancia creada, solo queda mapearla a un periférico disponible en la clase UART y ya se podría utilizar. Para hacer esto, se ha de definir el mapa de UARTs disponibles \textit{available\_uarts}. En caso de que ya este definido en otro sitio, simplemente se debe añadir a esa definición la nueva conexión en el mapa, de esta manera: 
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
+      {UART::uart5, &UART::instance5},
+    };
+  \end{lstlisting}
+\caption{Ejemplo de como vincular en el mapa el periférico y su instancia}
+\label{UARTavailableMap}
+\end{figure}
+\par \vspace{0.3cm}
+
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    UART_HandleTypeDef huart1;
+
+
+
+
+    UART::Instance UART::instance5 = { .TX = PB6, .RX = PB7, .huart = &huart1,
+    .instance = USART1, .baud_rate = 9600, .word_length = UART_WORDLENGTH_64B,
+    };
+
+    unordered_map<UART::Peripheral, UART::Instance*> UART::available_uarts = {
+      {UART::uart5, &UART::instance5},
+    };
+  \end{lstlisting}
+\caption{Ejemplo completo de declaración del UART en Runes}
+\label{UARTfullRunes}
+\end{figure}
+\par \vspace{0.3cm}
+
+Una vez hecho esto, ya se podría; al fin, utilizar los pines PB6 y PB7 como UART; asumiendo que se hayan configurado correctamente en Pins.hpp como se indicó anteriormente. Para ello simplemente se hace UART::inscribe(uart5); justo antes del ST-LIB::start() (o HALAL::start(), dependiendo de cuanto de la librería se quiera activar) y se utiliza como se muestra en su sub-apartado. 
+\par \vspace{0.3cm}
+Todos los módulos de la librería usan la misma estructura de instancia y mapa; aunque algunos puedan usar más de un mapa. Si se sigue este proceso se puede configurar cualquier Pin a cualquier módulo sin ningún problema; pero si se tiene alguna duda siempre se puede mirar el Runes.hpp del template-project para usarlo como ejemplo, pues tiene todos los módulos configurados en al menos una instancia. 
+\par \vspace{0.3cm}
+Esta es la configuración mas complicada de la librería, y una transacción necesaría si se quiere usar el microprocesador a su máximo potencial. Sin embargo, para la mayoría de prototipos y programas básicos, el ejemplo de template-project debería tener todas (o al menos la mayoría) de las necesidades cubiertas, por lo que se recomienda utilizarlo y solo modificar el Runes si es estrictamente necesario para el diseño que se tiene en mente, pues puede consumir bastante tiempo y se pueden encontrar problemas de configuración de la HAL. 
+
+\subsubsection{Prueba básica de funcionamiento}
+Una vez toda la configuración esta en marcha, toca probar si está todo funcionando correctamente. Para ello, se puede usar un pequeño trozo de código que use la ST-LIB para hacer parpadear un led, y comprobar si la librería esta funcionando. \par 
+\begin{figure}[h]
+  \begin{lstlisting}
+    #include "main.h"
+    #include "lwip.h"
+
+    #include "ST-LIB.hpp"
+    #include "Runes/Runes.hpp"
+
+    int main(void){
+      DigitalOutput led(PE1);
+      ST-LIB::start();
+      time::add_low_precision_alarm(1000,()[]{led.toggle();});
+      while(1){
+        /*Este bucle evita que termine el programa*/
+        /*normalmente aquí dentro se pondrian acciones secundarias del programa*/
+      }
+    }
+  \end{lstlisting}
+\caption{Ejemplo de archivo main.cpp de un led parpadeando una vez por segundo}
+\label{BlinkyCode}
+\end{figure}
+\par \vspace{0.3cm}
+Este programa declara un led\footnote{en este caso se ha puesto en el PE1, pues es el led amarillo configurado en el template project para la nucleo stm32h7z23zg, pero se puede configurar para cualquier pin que no tenga una función alternativa; pues es un GPIO} y se añade una función a una alarma cada segundo que cambie el estado del led. \par 
+Ahora se revisaran los posibles problemas que pueda tener el programa. 
+\par \vspace{0.3cm}
+Si el led no parpadea lo primero que hay que hacer es comprobar en el \textit{debugger} del cube si pasa del ST-LIB::start(). Si no pasa del start lo mas probable es que no se haya desactivado el módulo Ethernet ni se tenga un bus Ethernet viable conectado (viable quiere decir que este conectado en ambos puntos a un dispositivo con capacidades de resolver ARP request, osea se, que pueda usar Ethernet). Si sobrepasa el start y activa el led.toggle() quiere decir que el Pin esta configurado en el runes.hpp o en pins.hpp como alguna función alternativa. 
+\par \vspace{0.3cm}
+Si el led parpadea pero no cambia de estado cada segundo exactamente entonces se configuraron mal los relojes en el apartado del IDE. Quizás no se pusiera la variable de entorno nucleo o board correctamente, o quizas el reloj externo que se usa (en caso de seleccionar board) no tenga la frecuencia en Hz que se escribio en la variable de entorno HSE. 
+\par \vspace{0.3cm}
+En caso de que parpadee correctamente cada segundo, la librería debería funcionar correctamente y estar lista para ser usada. 
 
 \newpage
 
@@ -390,8 +558,15 @@ Por ultimo, la ST-LIB High tiene como objetivo juntar todos los módulos de la S
 \newpage
 
 \section{Diseño y funcionalidad}
-En esta sección se explicara en más detalle la estructura de la librería, como funciona y cuales son los casos de uso esperados para cada uno de sus módulos. Se dividirá en las tres partes principales de la librería: Core, Low y High, más una explicación generalizada del objetivo de diseño. 
+En esta sección se explicara en más detalle la estructura de la librería, como funciona y cuales son los casos de uso esperados para cada uno de sus módulos. Se dividirá en las tres partes principales de la librería: Core, Low y High, más una explicación generalizada del objetivo de diseño y un par de sub-apartados adicionales para estructuras de especial interes.  
 \subsection{ST-LIB Core}
+La ST-LIB Core es la capa más profunda de la librería ST-LIB, y por tanto sufre de una curva de aprendizaje mas empinada y puede ser más laborioso a la hora de trabajar con ella. 
+\par
+Las capas superiores se han hecho con la intención de que el usuario no tenga, necesariamente, que saber utilizar la ST-LIB Core; por lo que este apartado no es necesario para comenzar a utilizar la librería directamente. 
+\par \vspace{0.3cm}
+No obstante, saber utilizar esta capa puede ser una muy buena base para aprender en profundidad como funciona tanto la librería como la programación de microcontroladores en general; y es la capa que permite hacer más cosas al estar mas cerca del código maquina. \par \vspace{0.3cm}
+Si se quiere hacer un código básico para un evento urgente (como terminar un prototipo para una fecha límite cercana), es recomendable saltarse este apartado. No obstante, si se tiene pensado usar la ST-LIB a largo plazo para múltiples proyectos, o si ya se tiene experiencia en el mundo de los microcontroladores; este es el apartado más importante. 
+
 \subsubsection{Modelos y Servicios}
 La ST-LIB Core se divide en la parte estructural (o los modelos) y la parte funcional (o los servicios). Los modelos permiten abstraer el concepto de registros de periféricos, relojes, contadores, uso de la memoria flash, y demás propiedades del propio hardware del micro que pueden ser demasiado abrumadoras para una persona que se esta introduciendo al mundo del firmware y demasiado repetitivas y laboriosas para un equipo que ya conoce sus necesidades sobre estos aspectos del hardware y prefieren tener una base ya creada para no tener que configurar cada proyecto que hagan. \par \vspace{0.3 cm}
 
@@ -435,6 +610,7 @@ La estructura de los tres primeros es la misma: mapas que alocan los recursos de
 \par \vspace{0.3 cm}
 Para utilizarlo es tan sencillo como parece, primero convocas inscribe dandole como parametro el Pin que deseas configurar, y guardando su retorno en una variable uint8, luego convocas el start y por último tomas las lecturas cada vez que las necesites. Aquí un ejemplo del main:
 
+\begin{figure}[h]
 \begin{lstlisting}
 uint8_t DigitalID = DigitalInputService::inscribe(PA5);
 uint8_t AnalogID = ADC::inscribe(PA0).value(); #devuelve un optional
@@ -446,14 +622,21 @@ while(1){
   printf(DigitalInputService::get_value(DigitalID));
 }
 \end{lstlisting}
+\caption{Ejemplo de código con un lector análogo}
+  \label{Analogcode}
+\end{figure}
 \par \vspace{0.3 cm}
 Se recomienda utilizar el HALAL start en lugar de usar los starts de los módulos ya que algunos módulos dependen de que otros hayan iniciado y tienen que activarse en un orden en concreto. Por ejemplo, el módulo ADC usa las DMA para capturar los valores sin usar capacidad de procesador para mejorar la velocidad del código, pero tiene el pequeño defecto de no funcionar si las DMA no 
 \par \vspace{0.3 cm}
 Aparte de estos tres sensores esta el EXTI (External Interrupt) que permite activar interrupciones directamente a partir de cableado. El EXTI es más especial porque le puedes especificar que es lo que tiene que hacer cuando sea interrumpido a traves de una \textit{lambda expression}. Las lambda son basicamente funciones sin identificador, que se define por su clausula de captura de parametros, los parametros que recibe, y el código a ejecutar. 
+\begin{figure}[h]
 \begin{lstlisting}
 uint8_t externalID = ExternalInterrupt::inscribe(PA5,()[]{printf("Hola");},FALLING);
 HALAL::start();
 \end{lstlisting} 
+\caption{Ejemplo de código con una interrupción externa GPIO}
+  \label{EXTIcode}
+\end{figure}
 \par \vspace{0.3 cm}
 Este código define un external interrupt en el pin PA5 que imprimirá ``Hola'' cada vez que caiga la señal; es decir, que pase de 1 a 0. Puedes ponerle las opciones de RISING o FALLING, que quiere decir de 0 pasa a 1 y de 1 pasa a 0. \par\vspace{0.3 cm}
 Hasta ahora nos hemos referido a la función \textit{printf} como la función que imprime un texto, pero como el periférico por el que se imprime depende de la preferencia del programador, probablemente sea necesario sobreescribirla. Actualmente en la ST-LIB lo imprime por UART, un protocolo de comunicación del cual hablaremos en las próximas secciones. Dependiendo del modo de programación (Nucleo o Board) estara en el uart1 o en el uart2 (definidos en el Runes) \par
@@ -466,6 +649,7 @@ El módulo PWM tiene una clase con constructor, por lo que para usarla debe guar
 Los periféricos de esta clase no se inicializan en el HALAL start como protección, ya que entre otras cosas las PWM sirven como control de motor, e inicializarlo de forma discreta podría ser peligroso. En su lugar, el usuario debe activarlo y desactivarlo cuando vea necesario. 
 \par \vspace{0.3cm}
 Ademas de la clase PWM, el módulo tiene tres clases que heredan de ella que añaden nuevas propiedades. Estas son PhasedPWM, DualPWM y DualPhasedPWM. PhasedPWM te permite añadir una fase angular a la onda cuadrada que genera el PWM, para sincronizar la onda con otras ondas a conveniencia. La DualPWM crea dos señales PWM negadas entre si. Y la DualPhasedPWM es una DualPWM a la cual se le puede aplicar fase (ambas son afectadas por el cambio ya que una es la negada de la otra). La fase es una float que puede ir desde -100\% hasta +100\%, que a nivel de onda representa un cambio de fase de -pi hasta +pi (en radianes). Un ejemplo rápido de uso:
+\begin{figure}[h]
 \begin{lstlisting}
   DualPhasedPWM pwm(PA5,PA6);
   pwm.set_duty_cycle(40.0);
@@ -473,18 +657,25 @@ Ademas de la clase PWM, el módulo tiene tres clases que heredan de ella que añ
   pwm.set_phase(30.0);
   pwm.turn_on();
 \end{lstlisting}
+\caption{Ejemplo con dos PWM}
+  \label{PWMcode}
+\end{figure}
 \par \vspace{0.3 cm}
 Con este código hemos puesto dos pwm negadas entre si en un duty cycle del 40\%, una frecuencia de 1 Hz, y una fase del 30\% (+pi*0.3 de fase angular). Como se puede comprobar operar las PWM se ha vuelto mucho más sencillo ya que el módulo gestiona automaticamente toda la configuración de software.  
 
 \subsubsection{Time}
 La clase time incluye la gestión de los timers, las alarms, y el rtc (\textit{real time clock}). Como hay una cantidad limitada de timers en el microcontrolador y algunos de estos son necesarios para hacer funcionar otros módulos como las PWM, en su lugar se utilizan tres timers generales para que gestionen la gran mayoría de las alarmas y una interfaz con los timers restantes en caso de querer una alarma crítica. \par
 Los timers generales low y mid estan configurados para crear una interrupción cada 50 microsegundos y cada milisegundo, respectivamente. Luego de saltar la interrupción comprueba si las condiciones de las alarmas configuradas por el usuario se han cumplido, si es el caso ejecuta la lambda expression que le corresponde y en caso contrario la ignora. Un ejemplo de configuración:
+\begin{figure}[h]
 \begin{lstlisting}
   uint64_t counter = 0;
   Time::register_mid_precision_alarm(100,[&](counter){counter++;});
   Time::register_low_precision_alarm(100,[&](counter){printf(counter);});
   HALAL::start();
 \end{lstlisting}
+\caption{Ejemplo de código con dos alarmas}
+  \label{Alarmcode}
+\end{figure}
 \par \vspace{0.3 cm}
 Este código sumara cada 100 microsegundos +1 al contador y lo imprimirá cada 100 milisegundos. Hay que indicar que el divisor del mid precision redondea hacia abajo y su paso es 50, asi que poner menos de 50 microsegundos como intervalo de la alarma hara que no funcione correctamente. De la misma forma si se pone 75 se redondeara a 50 para que encaje en el reloj.  \par
 Otro problema del mid precision timer es que requiere del timer23 de la placa; y dependiendo de el código que estes implementando puedes necesitar el timer23 para declarar PWMs en algunos pines. En el caso de la familia H7 hay 4 timers de 32 bits (el 2, el 5, el 23 y el 24). El 24 se usa para el global timer, y el 2 y el 5 estan asignados para high precision timers. Si declaras los pines que usan el timer 23 para el PWM y utilizas el mid precision timer el iniciador del timer dara un error avisando de que no puede usarse el reloj para ambas cosas, pero se debe tener en cuenta a la hora de estructurar una placa. También se puede cambiar el Runes si tu núcleo específica permite otra configuración, pero eso se tratará en su respectivo apartado. Como última medida se podría modificar el módulo time para usar uno de los relojes de los high precision timers y darselo al mid precision time, pero esto dejaría a la núcleo con solo un timer de precisión crítica \par \vspace{0.3 cm} 
@@ -499,6 +690,7 @@ La mayoría de las familias de microcontroladores STM incluyen la unidad de acel
 \par \vspace{0.3cm}
 Una de las peculiaridades del CORDIC es que solo funciona con lógica binaria; es decir, no acepta coma flotante (ni floats ni doubles). El módulo CORDIC ya viene con un metodo que transforma las float (en radianes) a int32 en el formato que el CORDIC recibe. Sin embargo, no se recomienda abusar de este método ya que la transformación de int a float consume muchos recursos desde el punto de vista de la optimización (estamos hablando a nivel de ciclos de reloj), haciendo que vaya más lento incluso que la librería math arm con lógica de floats, lo cual le quita el sentido a usar el módulo CORDIC en primer lugar \footnote{hay que añadir que la familia H7 es la más potente de todas las familias, y la unidad CORDIC interna es la misma para todas las familias y su cálculo independiente del reloj del microcontrolador. Esto quiere decir CORDIC sera más útil para otras familias y este módulo podría superar math arm incluso con recasting continuo en estas (porque un ciclo de reloj toma más tiempo y por ende CORDIC necesita menos ciclos de reloj para hacer la operación)}. \par
 Por ello CORDIC solo se puede usar de forma eficiente si tienes tres o más operaciones trigonométricas consecutivas que aplicar a un valor antes de tener que volverlo a transformar o si se usa lógica binaria en todo el código conectado a los cálculos trigonométricos. El primer caso se vería así:
+\begin{figure}[h]
 \begin{lstlisting}
 double angle = pi * 0.5;
 int32_t unary = RotationComputer::radian_f32_to_q31(angle); 
@@ -509,8 +701,12 @@ RotationComputer::cos_and_sin(pointer1, pointer2, pointer3, 1);
 RotationComputer::phase(pointer2,pointer3,pointer1,1);
 angle = RotationComputer::q31_to_radian_f32(unary);
 \end{lstlisting} 
+\caption{Ejemplo de código usando CORDIC transformando las variables}
+  \label{CORDICwCastcode}
+\end{figure}
 \par \vspace{0.3cm}
 El método cos and sin recibe un ángulo a traves de su primer parametro y calcula el coseno y el seno, metiendo estos valores en los punteros out que recibe como parametros. La razón por la que usa punteros es porque puede funcionar también con arrays de valores. El último valor es, de hecho, el tamaño de la array que recibe. La otra forma de usarlo, y la más recomendable si tus periféricos te devuelven en int los valores a procesar (como suele ser el caso), es con la lógica de ints directamente:
+\begin{figure}[h]
 \begin{lstlisting}
 int32_t *values = values_array;
 int32_t *x;
@@ -518,6 +714,9 @@ int32_t *y;
 RotationComputer:cos_and_sin(values,x,y,values_array_length);
 RotationComputer::phase(x,y,values,values_array_length);
 \end{lstlisting}
+\caption{Ejemplo de código CORDIC con lógica int}
+  \label{CORDICwIntcode}
+\end{figure}
 \par \vspace{0.3cm}
 Lo único tener en cuenta que hay que traducir el formato en el que se reciba los valores a el formato unario para que el cálculo sea correcto. El formato de los angulos recorre todos los valores posibles de las int, donde $180^o$ es el valor máximo que puede tener la int y $-180^o$ el valor mínimo (máximo negativo). \par
 Esto tiene las ventajas de que aprovecha al máximo la precisión que le dan y que las sumas de angulos no sufren overflow, ya que la representación de los angulos negativos funciona igual que la de las ints. Por ejemplo, max int +1 es igual a -max int, y $179.99995^o + 0.0001^o = 180.00005^0 = -179.99995^o$. \par
@@ -529,6 +728,7 @@ Los metodos phase y modulus operan en dicho espacio. \textit{phase} mide el áng
 El encoder o codificador rotatorio es un periférico que traduce señales de pulsos a posición angular representada con un contador de giros, y es muy usado en el mundo de los motores y la electrónica para obtener posición y cambio de posición a partir del diámetro de la rueda y su posición angular. De este sale también el encoder lineal, que traduce las mismas señales a desplazamientos lineales directamente (los contadores representan una distancia igual a la distancia de las bandas del encoder lineal). \par
 Los codificadores relativos son una versión más pequeña y económica que obtienen unicamente el cambio de posición relativo y no la posición angular absoluta. Simplemente envian una señal ``+1'' o ``-1'' cada vez que una banda del encoder se cruca con el interruptor óptico, y suelen tener una precisión similar por una pequeña parte del precio. \par \vspace{0.3cm}
 El módulo encoder se encarga de transformar estos codificadores relativos en un codificador completo, guardando la posición inicial y sumando en un contador todos los cambios de posición para obtener el desplazamiento total. También se encarga de la configuración inicial del encoder como el resto de módulos. La declaración funciona así:
+\begin{figure}[h]
 \begin{lstlisting}
   uint8_t encoder_id = Encoder::Encoder(PE0, PG1).get_value();
   ST-LIB::start();
@@ -538,6 +738,9 @@ El módulo encoder se encarga de transformar estos codificadores relativos en un
     bool direction = Encoder::get_direction(encoder_id);
   }
 \end{lstlisting}
+\caption{Ejemplo de código con el Encoder de la ST-LIB Core}
+  \label{Encodercode}
+\end{figure}
 \par \vspace{0.3cm}
 Este código declara que el encoder esta conectado a los pines PE0 y PG1, lo enciende y lee de forma continua tanto la posición como la dirección a la que fue la última rotación. Tener en cuenta que el encoder comienca su contador en 32768 para que comience lo más lejos posible del overflow y el underflow, debido a que dependiendo de la dirección puede sufrir uno u otro. En los calculos que se hagan se ha de tener en cuenta que esta es la posición inicial del encoder. Además, si se tiene pensado usar en largas distancias se recomienda añadir lógica en caso de overflow (y undeflow). En la ST-LIB Low ya se añaden todas estas abstracciones.
 \subsubsection{Flash}
@@ -545,13 +748,19 @@ La mayoría de la memoria del microcontrolador es volátil, lo cual quiere decir
 El módulo de la flash tiene como propósito manejar esta memoria de la forma más directa y simple posible. Tiene tres métodos: Read, Write y Erase. Los dos primeros reciben una posición de memoria inicial, un puntero con o bien los datos a escribir o el lugar donde se guardaran los datos leídos, y el tamaño de la lectura o escritura (cuantos bytes se va a leer). Erase por su lado simplemente recibe la posición inicial y la final y borra todo de por medio. \par \vspace{0.3cm}
 La flash se divide en páginas de 128 kB, y para escribir se debe acceder a una página de la flash en modo escritura, y cuando se accede de esta manera la memoria es borrada para poder escribir la nueva información. Para solventar esto simplemente se hace una lectura antes de la escritura, se anexiona la parte de la memoria que no se va a escribir al buffer de escritura, y se escribe toda la página.
 \subsection{ST-LIB Communication}
-La comunicación es en su mayoria parte de la ST-LIB Core, pero es tan extensa que por simplicidad es mejor darle su propio apartado. Al igual que la mayoria de la ST-LIB esta apoyada en la librería HAL, parte de la ST-LIB Communication se apoya en la librería LWIP, un middleware que gestiona las comunicaciones por Ethernet TCP/IP muy eficiente y que trabaja principalmente con interrupciones. 
+La comunicación es en su mayoria parte de la ST-LIB Core, pero es tan extensa que por simplicidad es mejor darle su propio apartado. Al igual que la mayoría de la ST-LIB esta apoyada en la librería HAL, y además parte de la ST-LIB Communication se apoya en la librería LWIP, un middleware que gestiona las comunicaciones por Ethernet TCP/IP muy eficiente y que trabaja principalmente con interrupciones. 
+\par \vspace{0.3cm}
+ST-LIB Communication contiene los protocolos de comunicación mas comunes en el mercado: \textit{TCP (Ethernet), UDP (Ethernet), FDCAN, I2C, SPI, y UART}; además de introducir el protocolo de sincronización SNTP el cual esta esta fuertemente vinculado con el reloj RTC. \par \vspace{0.3cm}
+Si algun protocolo de comunicación no es del interés del usuario, se recomienda desactivarlo eliminando del archivo main.h el define de ese módulo en la HAL o simplemente comentando del HALAL start y del ST-LIB update sus apariciones; pues estos protocolos tienen embebidas varias protecciones para asegurarse de establecer comunicación con largos márgenes de tiempo que pueden pausar al microcontrolador en ejecución. \par \vspace{0.3cm}
+Estas protecciones están activas para evitar falsas señales y asegurar de que no se pierde ningún mensaje, pero si no se están utilizando no son más que un estorbo para la ejecución del código. Especialmente los protocolos Ethernet pueden afectar al microprocesador pues tienen una protección para no activar la placa hasta que un bus Ethernet viable sea conectado; por lo que el código no funcionará si no se le conecta el cable Ethernet o se desactiva el módulo Ethernet. 
+
 \subsubsection{UART}
 UART es el protocolo de comunicación más sencillo que implementa la librería. Su funcionamiento es bastante básico, tiene un canal para el reloj que marca el paso para enviar y leer cada bit, y otro canal para enviar byte a byte la información. 
 \par
 El canal se encuentra en estado lógico 1 cuando esta parado, y la comunicación se hace por paquetes de tamaño dependiente del estándar usado. En el caso del estandar 8N1 (\textit{el más usado y la configuración inicial en la ST-LIB}) se inicia la comunicación con un bit en estado 0, se envia el byte de información (el tamaño del paquete en este estándar, 8 bits), y se cierra con un bit lógico 1. 
 \par \vspace{0.3cm}
 En la librería UART tiene las opciones de comunicación de polling y por DMA con interrupciones, como la mayoría de módulos de la ST-LIB Core tienen. Las opciones son tan sencillas como leer y escribir, pues UART es un protocolo de comunicación punto a punto. El código por polling: 
+\begin{figure}[h]
 \begin{lstlisting}
   uint8_t uart = UART::inscribe(UART::uart2);
   ST-LIB::start();
@@ -563,12 +772,16 @@ En la librería UART tiene las opciones de comunicación de polling y por DMA co
     }
   }
 \end{lstlisting}
+\caption{Ejemplo de código de UART usando polling}
+  \label{UARTwPollingcode}
+\end{figure}
 \par \vspace{0.3cm}
 Este fragmento de código enviará continuamente los bytes 5, 5, 2, 2 y esperara a la respuesta desde el otro lado, la cual guardara en la array data receive y volvera a comenzar. Sobre el método inscribe, este recibe un periférico UART declarado en el módulo \footnote{El módulo UART solo tiene declarados diez périfericos uart (de uart1 a uart10). Si se quieren añadir más, se deberá modificar el header del módulo para declararlos} y definido en el archivo runes (en el ejemplo uart2). Como es común en la ST-LIB Core; el inscribe te devuelve un número id que representa en que punto de su lista fue guardada la configuración de tu periférico. 
 \par
 Importante añadir que el inscribe solo funcionará sí se hace antes del ST-LIB start. Esto es debido a que el start activa todos los periféricos inicializados por el usuario; pero una vez el ST-LIB start se ha ejecutado ya no activará más periféricos. Se puede circundar este problema con el método start de cada módulo, pero la mejor práctica es tener los periféricos fijos antes de activar el código de la placa. 
 \par \vspace{0.3cm}
 La versión usando DMA tiene un par de añadidos nuevos, pero también añade complejidad al código. Hay dos métodos adicionales, \textit{is busy} y \textit{has next packet}, que permiten saber si la comunicación por DMA ha terminado. El mismo código por DMA sería: 
+\begin{figure}[h]
 \begin{lstlisting}
   uint8_t uart = UART::inscribe(UART::uart2);
   ST-LIB::start();
@@ -583,10 +796,14 @@ La versión usando DMA tiene un par de añadidos nuevos, pero también añade co
     }
   }
 \end{lstlisting}
+\caption{Ejemplo de código UART usando DMA}
+  \label{UARTwDMAcode}
+\end{figure}
 \par \vspace{0.3cm}
 
 En este caso el código hara una petición a la DMA para que trasmita los datos del data send siempre que está este libre, mientras que al mismo tiempo revisará si ha recibido un paquete del otro lado y de ser el caso lo guardara en data receive. \par En este caso no tiene mucho sentido usar la DMA porque no hay mas código que ejecutar que comunicarse por UART, pero la ventaja viene en que mientras esta gestionando el canal de comunicaciones por DMA el micro puede seguir corriendo código. \par \vspace{0.3cm}
 Un ejemplo muy básico de cuando podría servir la DMA con UART es si se tiene más de un canal UART. El código sería asi: 
+\begin{figure}[h]
 \begin{lstlisting}
   uint8_t first_uart = UART::inscribe(UART::uart1);
   uint8_t second_uart = UART::inscribe(UART::uart2);
@@ -609,6 +826,9 @@ Un ejemplo muy básico de cuando podría servir la DMA con UART es si se tiene m
     }
   }
 \end{lstlisting}
+\caption{Ejemplo de código con dos UARTs}
+  \label{twoUARTcode}
+\end{figure}
 \par \vspace{0.3cm}
 En el caso de polling el programa tendría que esperar a que terminara la comunicación por el primer bus antes de comenzar a comunicarse por el segundo; y aun mas grave, tendría que esperar a la respuesta de ambos buses antes de comenzar la siguiente comunicación o ejecutar cualquier otro código. Con DMA, sin embargo, no hay ninguna espera y se pueden mantener comunicaciones paralelas por varios buses. 
 
@@ -618,7 +838,7 @@ Por contraparte los trabajadores se adaptan a la velocidad de reloj indicada (mi
 En ambos protocolos es posible tener mas de dos dispositivos conectados en una única red de comunicación; y en I2C además es posible tener mas de un controlador que arbitre el reloj y haga peticiones. Por ello, para identificarse entre los distintos dispositivos estos protocolos añaden utilidades adicionales que UART no tiene. \par
 En el caso de SPI, usa un cable específico para cada trabajador que lo activa o desactiva. El I2C por su parte usa un sistema de ip de 7 bits básico, y cada vez que se transmite una orden esta incluye la ip emisora y la receptora. \par \vspace{0.3cm}
 Quitando estas diferencias a nivel de la ST-LIB SPI y I2C funcionan igual que UART, y de hecho en el momento de la creación de estos módulos se uso UART como base para hacerlas. \par
-El código SPI con dos trabajadores se vería así: 
+\begin{figure}[h]
 \begin{lstlisting}
   uint8_t first_spi_worker = SPI::inscribe(SPI::spi1);
   uint8_t second_spi_worker = SPI::inscribe(SPI::spi2);
@@ -636,12 +856,38 @@ El código SPI con dos trabajadores se vería así:
     SPI::transmit_and_receive(second_spi_worker,data_send,data_receive2);
   }
 \end{lstlisting}
+\caption{Ejemplo de código SPI con dos trabajadores}
+  \label{SPIcode}
+\end{figure}
 \par \vspace{0.3cm}
-Como se puede ver este código funciona por polling. La razón de ello es que los trabajadores que se comunican por SPI (o I2C) no avisan de cuando han terminado (pues podrían interrumpir otra comunicación). En su lugar su controlador debe preguntarles y estos le devolverán un valor u otro dependiendo de si acabaron su proceso o aun estan ocupados. \par
+Como se puede en el código de la figura \ref{SPIcode} funciona por polling. La razón de ello es que los trabajadores que se comunican por SPI (o I2C) no avisan de cuando han terminado (pues podrían interrumpir otra comunicación). En su lugar su controlador debe preguntarles y estos le devolverán un valor u otro dependiendo de si acabaron su proceso o aun estan ocupados. \par
 Como las DMA no tienen la suficiente capacidad lógica para resolver si la información que han recibido implica que el periférico ha terminado o aún esta en proceso, no tiene mucho sentido utilizar las DMA en estos protocolos. \par 
 Adicionalmente, su comportamiento ya ofrece en cierta forma paralelización, pues el controlador sabe cuando va a devolverle la información que desea (sea esta información la respuesta o que aun esta procesando); ya que los trabajadores solo responden cuando se les pide, y conservan la respuesta hasta entonces. Debido a esto, el controlador puede seguir ejecutando código sin temer a perder la respuesta de su petición y recibirla cuando las tareas críticas hayan sido atendidas. 
 \par \vspace{0.3cm}
-Como I2C 
+Como I2C puede usar los mismos pines para comunicarse con toda la red de trabajadores, no hay necesidad de declarar un I2C por cada uno de ellos. Ademas, al requerir una comunicación por paquetes algo mas compleja se ha hecho un módulo de apoyo. Quitando estos dos matices, funciona de la misma forma que el protocolo SPI. Aquí un pequeño fragmento de código del I2C:
+\begin{figure}[h]
+\begin{lstlisting}
+  uint8_t i2c_workers = I2C::inscribe(I2C::i2c2);
+  uint8_t first_worker_id = 0x40;
+  uint8_t second_worker_id = 0x50;
+  ST-LIB::start();
+  uint8_t data_send[] = {0xAA, 0x00, 0x00}; 
+  uint8_t data_receive[3]; 
+  I2CPacket first_worker_order(first_worker_id,data_send);
+  I2CPacket second_worker_order(second_worker_id,data_send);
+  I2CPacket first_worker_read(first_worker_id,data_receive);
+  I2CPacket first_worker_read(first_worker_id,data_receive);
+  while(1){
+    I2C::transmit_next_packet(i2c_handler_id,*check_order_packet);
+  }
+\end{lstlisting}
+\caption{Ejemplo de código I2C con dos trabajadores}
+\label{I2Ccode}
+\end{figure}
+\footnote{En algunas versiones de la librería se requiere añadir el tamaño del paquete pues aún no se aplicaron los cambios para usar span}
+\par \vspace{0.3cm}
+
+
 
 \section{Testeo y profiling de la librería}
 \subsection{Testing automático}
