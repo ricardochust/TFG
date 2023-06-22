@@ -270,12 +270,22 @@ Palabras clave: ST-LIB, STM32, Hyperloop, ingeniería de computadores, desarroll
 \par \vspace{0.2 cm}
 \textbf{ST-LIB High} Capa superior de la ST-LIB
 
-\section{Formato del documento}
-Los números rojos (\ref{STLIBimport}) hacen referencia a figuras dentro del documento, y estan vinculados a esta.
-\par \vspace{0.2 cm}
-Los números verdes (\ref{web:github:STLIB}) hacen referencia a un enlace externo en la bibliografia al final del documento, y estan vinculados a esta (y no al enlace externo)
+\newpage
 
-\begin{figure}
+\section{Formato del documento}
+Los números rojos en texto (\ref{STLIBimport})hacen referencia a figuras dentro del documento, y estan vinculados a esta.
+\par \vspace{0.5 cm}
+Los números rojos como superindice\footnote{Nota a pie de página de ejemplo}; sin embargo, indican notas a pie de página 
+\par \vspace{0.5 cm}
+Los números verdes \cite{web:github:STLIB} hacen referencia a un enlace externo en la bibliografia al final del documento, y estan vinculados a esta (y no al enlace externo)
+\par \vspace{0.5 cm}
+El texto en itálica hace referencia, generalmente, a anglicismos como \textit{array}; o a ejemplos de una composición de código fuera de un fragmento como \textit{git clone enlace}
+\par \vspace{0.5 cm}
+Los fragmentos de código de múltiples lineas están insertados en un bloque negro, generalmente dentro de una figura:
+\begin{figure}[h]
+  \begin{lstlisting}
+    println("Hola Mundo")
+  \end{lstlisting}
 \caption{Figura con ejemplo de código}
 \label{FormatFigureExample}
 \end{figure}
@@ -922,7 +932,7 @@ Además, CAN-FD; a diferencia de los protocolos previamente mencionados, si est�
 \par \vspace{0.3cm}
 Si se desea comunicar CAN-FD a un sistema que este usando un RTOS (sea se un ordenador o un microprocesador), lo más probable es que se requiera de una interfaz PCAN-USB. 
 \par \vspace{0.3cm}
-En cuanto a la interfaz de software del módulo CAN-FD, está estructura para funcionar de la misma manera que los otros protocolos de comunicación. Como siempre, en la figura \ref{FDCANcode} se mostrará un ejemplo de código. 
+En cuanto a la interfaz de software del módulo CAN-FD, está estructura para funcionar de la misma manera que los otros protocolos de comunicación. Como siempre, en la figura (\ref{FDCANcode}) se mostrará un ejemplo de código. 
 
 \begin{figure}[h]
   \begin{lstlisting}
@@ -942,8 +952,182 @@ En cuanto a la interfaz de software del módulo CAN-FD, está estructura para fu
   \label{FDCANcode}
   \end{figure}
 
-Este código se ha desenvuelto un poco por claridad, pero la idea es que se pueda hacer \textit{hard-code} la mayoría de valores dentro de los paquetes y que estos sean la referencia a la que acudir. Como se ve, en el envío se usa un \textit{array} y la recepción un paquete. Lo cierto es que son intercambiables, y además se puede usar cualquier otra estructura de información que se agrupe dentro del módulo \textit{span} de C++. 
+Este código se ha desenrrollado un poco por claridad, pero la idea es que se pueda hacer \textit{hard-code} con la mayoría de valores dentro de los paquetes y que estos sean la referencia a la que acudir. Como se ve, en el envío se usa un \textit{array} y la recepción un paquete. Lo cierto es que en este módulo son intercambiables, y además se puede usar cualquier otra estructura de información que se agrupe dentro del módulo \textit{span} de C++. El último valor del transmit y del packet es el tamaño de paquete. 
 
+\subsubsection{UDP}
+UDP es el protocolo mas sencillo de Ethernet. Se basa en mandar paquetes de información sin ningún tipo de comprobación o protección a una o mas ip. No hay garantía de que el paquete llegue, ni es ese el propósito de este protocolo. 
+\par \vspace{0.3cm}
+La idea de este protocolo es poder enviar información recurrente o un gran flujo de datos continuo consumiendo la menor cantidad de proceso posible. Si el bus Ethernet esta montado correctamente y no se dan condiciones extremas la probabilidad de perdida de paquete es ínfima, así que para procesos que requieran una actualización continua con un margen de error aceptable este protocolo es ideal. 
+\par \vspace{0.3cm}
+Por otra parte para sistemas críticos que requieren enviar una señal específica con la máxima prioridad, probablemente se desee establecer una conexión TCP en su lugar. 
+\par \vspace{0.3cm}
+Algunos ejemplos de uso para UDP serían:
+\begin{figure}[H]
+\cdot \hspace{0.1cm} Actualización de datos en tiempo real \par
+\cdot \hspace{0.1cm} Grabación u obtención de imagenes de cámara en directo \par
+\cdot \hspace{0.1cm} Comunicación por voz a traves de la red \par
+\cdot \hspace{0.1cm} Sincronización de relojes 
+\label{UDPuses}
+\end{figure}
+\par \vspace{0.3cm}
+Mientras que UDP en sí no tiene ninguna protección, el módulo Ethernet de la librería sí tiene unas mínimas protecciones en marcha; pensadas para que no reduzcan la efectividad de UDP.
+\par
+La librería comprueba primero; antes de activar los sensores, periféricos y actuadores de la placa; si el bus de Ethernet es viable. Esta comprobación se hace a traves del protocolo ARP, que permite resolver a traves de las direcciones MAC la ip de cada dispositivo conectado a la red. 
+\par \vspace{0.3cm}
+El protocolo ARP solo puede fallar si hay más de un dispositivo con la misma MAC en la red o si hay solo 1 dispositivo conectado a la red, osea se, solo un lado del cable Ethernet esta conectado. El módulo Ethernet de la librería solo falla al activar la placa (se queda esperando infinitamente) si el protocolo ARP no se resuelve o si la ip escrita en el módulo ya esta ocupada. \par \vspace{0.3cm}
+Debido a que lo más probable es que el usuario desee conectar más de una placa a la misma red, es de interés cambiar tanto la MAC como la IP de la placa antes de conectarla la comunicación Ethernet fallara. \par
+Esto es tan sencillo como ir dentro del proyecto a LWIP/app/lwip.c y cambiar dentro del método MX\_LWIP\_Init la \textit{array} IP\_ADDRESS para la ip; y LWIP/Target/ethernetif.c dentro del método low\_level\_init la \textit{array} MACAddr a la dirección MAC deseada. 
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    IPV4 ip_placa("192.168.0.4");
+    IPV4 ip_objetivo("192.168.0.5");
+    uint16_t puerto = 50000;
+    ST-LIB::start();
+    DatagramSocket connection(ip_placa, puerto, ip_objetivo, puerto);
+    uint8_t send_message_id = 10;
+    uint8_t receive_message_id = 12;
+    uint8_t data_send[] = {0xAA, 0x00, 0x00}; 
+    uint8_t data_receive[3]; 
+    StackPacket packet_send(send_message_id, data_send);
+    StackPacket packet_read(receive_message_id,data_receive, [&](){data_send[2]++;});
+    while(1){
+      connection.send(packet_send);
+      ST-LIB::update();
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de código UDP}
+  \label{UDPcode}
+\end{figure}
+\par \vspace{0.3cm}
+
+Este código envía un paquete que contiene data\_send a la ip objetivo, y cuando la ip le responda activará una interrupción que ejecutara la lambda dentro del packet read. 
+\par
+Primero de todo, se puede ver que ahora se ha comenzado a usar el ST-LIB::update(). Este método se encarga de actualizar en tiempo real las acciones automáticas de la librería; que incluyen protecciones, detección de errores y obtención de paquetes. En protocolos más sencillos capturar los paquetes era suficientemente sencillo como para que el usuario pudiese gestionarlo sin resultar un problema, pero debido a la velocidad y exigencias del protocolo Ethernet, además de su gran variedad de uso; se ha decidido que la librería lo gestionase por el usuario. 
+\par \vspace{0.3cm}
+Si no se ejecuta a suficiente velocidad el ST-LIB::update(), el buffer de Ethernet puede llenarse y perderse información (dependiendo del tráfico de la red puede rondar en el orden de horas o de segundos), por lo que se recomienda ejecutar el ST-LIB::update() lo más rápido posible (estando solo en el while es una ejecución en el orden de microsegundos). 
+\par
+ Si se siguen buenas prácticas de programación en microprocesadores (como tener interrupciones de muy poco código que activen marcadores para ejecutar otras cosas en futuro, ejecutar métodos con límites de tiempo y haciendo múltiples pasos en distintas llamadas), no debería haber problemas ni en los entornos con más carga de comunicación. 
+ \par \vspace{0.3cm}
+ Además, se puede ver que el paquete de envío packet\_send no tiene ninguna función lambda. Esto es meramente para que no provoque interrupción cuando reciba un paquete con esa id, e ignore los mensajes con esta id. Pero perfectamente se podría tener un paquete que tanto se enviara como se pudiese recibir desde otros dispositivos. \par
+ Por último, se le puede dar cualquier función de tipo \textit{void}, no es necesario que sea una lambda. De hecho, aunque las funciones lambda sean mas cómodas pueden provocar una reducción de velocidad si se usan continuamente, y puede ser de interés evitarla si se encuentran problemas de velocidad de ejecución. 
+
+ \subsubsection{TCP}
+ El protocolo TCP es el otro módulo mayor que surge de Ethernet. A diferencia de UDP, TCP tiene decenas de protecciones y siempre que se tenga un bus viable en Ethernet y una conexión establecida entre los dos puntos de comunicación, siempre llegará el mensaje al punto deseado. \par \vspace{0.3cm}
+ El único problema con TCP es que es más lento que el protocolo UDP, especialmente en el caso de que se desee enviar miles o millones de paquetes por segundo, pues TCP requiere de una confirmación (conocida como ACK) para cada uno de los paquetes, y además todos ellos deben tener cuarenta bits de cabecera obligatoria para que la comunicación funcione, aunque este contenga solo dos bits. \par 
+ Por ello, TCP se recomienda para paquetes críticos para el funcionamiento del sistema, de un solo envio, o de información que se debe recopilar con la máxima precisión. \par \vspace{0.3cm}
+ Quitando la necesidad de establecer una conexión, el módulo TCP de la ST-LIB funciona exactamente igual que el módulo UPD, asi que se recomienda leerse también el apartado de UDP para comprender correctamente el funcionamiento de TCP, ya que hay cosas que no se explicarán aqui para evitar repetición. \par 
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    IPV4 ip_placa("192.168.0.4");
+    IPV4 ip_objetivo("192.168.0.5");
+    uint16_t puerto_cliente = 50500;
+    uint16_t puerto = 50000;
+    ST-LIB::start();
+    Socket connection(ip_placa, puerto_cliente, ip_objetivo, puerto);
+    uint8_t send_message_id = 10;
+    uint8_t receive_message_id = 12;
+    uint8_t data_send[] = {0xAA, 0x00, 0x00}; 
+    uint8_t data_receive[3]; 
+    StackPacket packet_send(send_message_id, data_send);
+    StackPacket packet_read(receive_message_id,data_receive, [&](){data_send[2]++;});
+    while(1){
+      connection.send_order(packet_send);
+      ST-LIB::update();
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de código TCP como usuario}
+  \label{TCPuserCode}
+\end{figure}
+
+\par \vspace{0.3cm}
+
+El primer ejemplo de código, mostrado en la figura \ref{TCPuserCode}, muestra que la conexión como usuario funciona practicamente igual que UDP. La única diferencia, es que la construccion del Socket puede fallar si no se consigue establecer conexión con el servidor en el tiempo límite, normalmente debido a que el servidor no este activado aún. 
+
+ \begin{figure}[H]
+  \begin{lstlisting}
+    IPV4 ip_placa("192.168.0.4");
+    IPV4 ip_objetivo("192.168.0.5");
+    uint16_t puerto = 50000;
+    ST-LIB::start();
+    ServerSocket connection(ip_placa, puerto);
+    uint8_t send_message_id = 10;
+    uint8_t receive_message_id = 12;
+    uint8_t data_send[] = {0xAA, 0x00, 0x00}; 
+    uint8_t data_receive[3]; 
+    StackPacket packet_send(send_message_id, data_send);
+    StackPacket packet_read(receive_message_id,data_receive, [&](){data_send[2]++;});
+    while(1){
+      if (connection.is_connected()){
+        connection.send_order(packet_send);
+      }
+      ST-LIB::update();
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de código TCP como servidor}
+  \label{TCPserverCode}
+\end{figure}
+
+\par \vspace{0.3cm}
+
+En este segundo ejemplo de código, mostrado en la figura \ref{TCPserverCode}, la placa hace de servidor. Por como esta estructurado, por ahora cada ServerSocket solo puede aceptar una conexión. Si se requieren de múltiples conexiones, la única opción actualmente es usar múltiples ServerSocket. En un futuro se tiene pensado hacer una abstracción en la ST-LIB LOW que maneje estos problemas, pero para la mayoría de necesidades en el mundo de los microprocesadores esto suele ser más que suficiente. 
+
+\subsubsection{SNTP}
+El protocolo SNTP es el protocolo de sincronización de relojes usado en la ST-LIB. Se basa en comunicación UDP y funciona de forma completamente automática en la ST-LIB. Funciona a traves de conectarse a un servidor indicado en SNTP.cpp (que se puede cambiar por cualquier otro servidor accesible desde la red cambiando el valor de la variable TARGET\_IP). \par 
+Si no se desea cambiar la ST-LIB, también se puede activar de forma manual con otra ip usando el método sntp\_update justo despues del ST-LIB::start, que actualizará la lista de servidores de las que puede reclamar la hora añadiendo la ip introducida y removiendo la de la ST-LIB. 
+\par \vspace{0.3cm}
+Siempre que el servidor NTP este funcionando, actualizará la hora una vez al activarse la placa y una vez cada hora despues de que la placa se active. El valor de la hora obtenido se guardara dentro del RTC, un sub-módulo dentro de time hecho especialmente para el funcionamiento del módulo SNTP, que puede guardar no solo un valor de reloj, si no además una hora y fecha. 
+\par \vspace{0.3cm}
+Para obtener todos los valores del RTC, es tan facil como usar el método adquisidor del RTC, como se muestra en la figura \ref{SNTPCode}
+
+\begin{figure}[H]
+  \begin{lstlisting}
+    ST-LIB::start();
+    while(1){
+      RTCData time_and_date = Time::get_rtc_data();
+      print(RTCData.year);
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de código SNTP imprimiendo el año actual}
+  \label{SNTPCode}
+\end{figure}
+\par \vspace{0.3cm}
+Al usarse este código se podrá comprobar que al principio imprimira fechas extrañas. Esto es debido a que hasta que no resuelva por primera vez la comunicación SNTP la fecha no va a estar actualizada, cosa que se debe tener en cuenta al programar el código. 
+
+\newpage
+
+\subsection{ST-LIB LOW}
+La ST-LIB LOW es la capa intermedia entre la ST-LIB Core y la ST-LIB HIGH; y es la capa que contiene la mayor cantidad de abstracciones, cambiando la forma de programar los microcontroladores de lenguaje C con manejo de registros e id de periféricos a una estructura mas parecida a C++, usando POO y múltiples macros declaradas en ST-LIB start y update. 
+\par \vspace{0.3cm}
+Por lo general, la mayoría de las cosas que un usuario utilice estarán en esta capa, pues la ST-LIB Core sufre de ser de muy bajo nivel; mientras que la ST-LIB HIGH puede llegar a ser demasiado específica. 
+\par \vspace{0.3cm}
+Todo lo que se encuentra en la ST-LIB LOW no es mas que una abstracción de la ST-LIB Core para facilitar su uso, así que no es estrictamente necesaria. No obstante, esta diseñada para ser más cómoda y rápida de usar añadiendo el mínimo coste de proceso posible, por lo que se recomienda usarla por encima de la ST-LIB Core siempre que sea posible.
+
+\subsubsection{Counter}
+Counter es un pequeño módulo de utilidad que sirve para contar las ocurrencias de un evento en una estampa de tiempo dada y obtiene su frecuencia, en Hz. 
+\par \vspace{0.3cm}
+Para cualquier cálculo que requiera del uso de frecuencia (o de periodo, que es la inversa de este), Counter puede ser útil. En la figura \ref{CounterCode}, un pequeño ejemplo: 
+\begin{figure}[H]
+  \begin{lstlisting}
+    Counter contador(100);
+    ST-LIB::start();
+    while(1){
+      contador.count();
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de código Counter que cuenta el número de veces que se pasa por el bucle While, por segundo}
+  \label{CounterCode}
+\end{figure}
+\par \vspace{0.3cm}
+
+Este código ejemplo obtiene la frecuencia con la que se pasa por el bucle while. Esto puede ser extremadamente útil para poder analizar el código, pues como se ha mencionado anteriormente el periodo es la inversa de la frecuencia. \par
+Digamos que se obtiene 200 000 Hz; la inversa sería 5 us, y ese sería el tiempo que ocupa convocar el método count en total. Adicionalmente, si añadieramos un segundo método, y la frecuencia cambiara a 50 000 Hz; se podría calcular el periodo de todo; 20 us, y restarle el de todos los métodos que ya conozcamos y esten en el while; el contador en este caso. 20 - 5 son 15 us y ese sería el tiempo en la práctica que consume convocar nuestro segundo método.  
+\par \vspace{0.3cm}
+Además de sus utilidades de depurado puede servir para hacer cálculos basados en formulas físicas para hacer un predictor.  
+
+\subsubsection{StopWatch}
+StopWatch es la contraparte de Counter, y hace la función de cronómetro; pero en lugar de ofrecer su información en unidades métricas la ofrece en ciclos de reloj. Para usarlo, simplemente se inicia una instancia de StopWatch donde se quiera comenzar a contar y se usa el método Stop para terminar de contar y recibir el 
 
 
 \section{Testeo y profiling de la librería}

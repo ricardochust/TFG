@@ -21,6 +21,12 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
+\bibitem{web:github:STLIB}
+\BIBentryALTinterwordspacing
+``St-lib.'' [Online]. Available:
+  \url{https://github.com/HyperloopUPV-H8/ST-LIB.git}
+\BIBentrySTDinterwordspacing
+
 \bibitem{web:EHW:homepage}
 \BIBentryALTinterwordspacing
 ``Pagina portada de la {EHW}.'' [Online]. Available:
@@ -36,12 +42,6 @@
 \BIBentryALTinterwordspacing
 ``Como instalar git.'' [Online]. Available:
   \url{https://git-scm.com/book/en/v2/Getting-Started-Installing-Git}
-\BIBentrySTDinterwordspacing
-
-\bibitem{web:github:STLIB}
-\BIBentryALTinterwordspacing
-``St-lib.'' [Online]. Available:
-  \url{https://github.com/HyperloopUPV-H8/ST-LIB.git}
 \BIBentrySTDinterwordspacing
 
 \bibitem{web:github:templateproject}
