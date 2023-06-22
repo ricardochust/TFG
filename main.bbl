@@ -23,39 +23,43 @@
 
 \bibitem{web:EHW:homepage}
 \BIBentryALTinterwordspacing
-EHW, ``Pagina portada de la {EHW},'' 2023. [Online]. Available:
+``Pagina portada de la {EHW}.'' [Online]. Available:
   \url{https://hyperloopweek.com/}
 \BIBentrySTDinterwordspacing
 
 \bibitem{web:git:installationGit}
 \BIBentryALTinterwordspacing
-L.~Torvalds, ``Instalador de git,'' 2023. [Online]. Available:
-  \url{https://git-scm.com/download}
+``Instalador de git.'' [Online]. Available: \url{https://git-scm.com/download}
 \BIBentrySTDinterwordspacing
 
 \bibitem{web:git:installationGitHelp}
 \BIBentryALTinterwordspacing
-------, ``Como instalar git,'' 2023. [Online]. Available:
+``Como instalar git.'' [Online]. Available:
   \url{https://git-scm.com/book/en/v2/Getting-Started-Installing-Git}
 \BIBentrySTDinterwordspacing
 
 \bibitem{web:github:STLIB}
 \BIBentryALTinterwordspacing
-H.~UPV, ``St-lib,'' 2023. [Online]. Available:
+``St-lib.'' [Online]. Available:
   \url{https://github.com/HyperloopUPV-H8/ST-LIB.git}
 \BIBentrySTDinterwordspacing
 
 \bibitem{web:github:templateproject}
 \BIBentryALTinterwordspacing
-------, ``template-project,'' 2023. [Online]. Available:
+``template-project.'' [Online]. Available:
   \url{https://github.com/HyperloopUPV-H8/template-project.git}
 \BIBentrySTDinterwordspacing
 
 \bibitem{web:STM32:installationCube}
 \BIBentryALTinterwordspacing
-STMicroelectronics, ``Pagina de instalación del {stm32CubeIDE},'' 2023.
-  [Online]. Available:
+``Pagina de instalación del {stm32CubeIDE}.'' [Online]. Available:
   \url{https://www.st.com/en/development-tools/stm32cubeide.html}
+\BIBentrySTDinterwordspacing
+
+\bibitem{web:CANFD:CiA}
+\BIBentryALTinterwordspacing
+``the basic idea of can-fd.'' [Online]. Available:
+  \url{https://www.can-cia.org/can-knowledge/can/can-fd/}
 \BIBentrySTDinterwordspacing
 
 \end{thebibliography}
