@@ -649,7 +649,10 @@ Para utilizarlo es tan sencillo como parece, primero convocas inscribe dandole c
 uint8_t DigitalID = DigitalInputService::inscribe(PA5);
 uint8_t AnalogID = ADC::inscribe(PA0).value(); #devuelve un optional
 uint8_t OutputID = DigitalOutputService::inscribe(PC0);
-HALAL::start(); #macro que contiene todos los metodos start necesarios
+HALAL::start(); #macro que activa todas las funcionalidades de la placa
+DigitalInputService::start(DigitalID);
+ADC::Start(AnalogID);
+DigitalOutputService::Start(OutputID);
 while(1){
   DigitalOutputService::set_pin_state(1);
   printf(ADC::get_value(AnalogID));
@@ -739,7 +742,7 @@ angle = RotationComputer::q31_to_radian_f32(unary);
   \label{CORDICwCastcode}
 \end{figure}
 \par \vspace{0.3cm}
-El método cos and sin recibe un ángulo a traves de su primer parametro y calcula el coseno y el seno, metiendo estos valores en los punteros out que recibe como parametros. La razón por la que usa punteros es porque puede funcionar también con arrays de valores. El último valor es, de hecho, el tamaño de la array que recibe. La otra forma de usarlo, y la más recomendable si tus periféricos te devuelven en int los valores a procesar (como suele ser el caso), es con la lógica de ints directamente:
+El método cos and sin recibe uno o más ángulos a traves de su primer parametro y calcula el coseno y el seno, metiendo estos valores en los punteros out que recibe como parametros. La razón por la que usa punteros es porque puede funcionar también con arrays de valores. El último valor es, de hecho, el tamaño de la array que recibe. La otra forma de usarlo, y la más recomendable si tus periféricos te devuelven en int los valores a procesar (como suele ser el caso), es con la lógica de ints directamente:
 \begin{figure}[h]
 \begin{lstlisting}
 int32_t *values = values_array;
@@ -755,8 +758,8 @@ RotationComputer::phase(x,y,values,values_array_length);
 Lo único tener en cuenta que hay que traducir el formato en el que se reciba los valores a el formato unario para que el cálculo sea correcto. El formato de los angulos recorre todos los valores posibles de las int, donde $180^o$ es el valor máximo que puede tener la int y $-180^o$ el valor mínimo (máximo negativo). \par
 Esto tiene las ventajas de que aprovecha al máximo la precisión que le dan y que las sumas de angulos no sufren overflow, ya que la representación de los angulos negativos funciona igual que la de las ints. Por ejemplo, max int +1 es igual a -max int, y $179.99995^o + 0.0001^o = 180.00005^0 = -179.99995^o$. \par
 El formato de las coordenadas simplemente representa un espacio acotado en -1 y 1 tanto en x como en y. Cuando superas el límite simplemente sufre overflow. \par \vspace{0.3cm}
-Los metodos phase y modulus operan en dicho espacio. \textit{phase} mide el ángulo entre la recta formada por el punto dado y el punto de origen con el vector (1,0). Esto es especialmente útil para comparar dos angulos, ya que la fase entre ambos es \textit{``la fase del primero con el eje x - la fase del segundo con el eje x''}. Osea, se les hace fase a ambos vectores y se restan los resultados. \par
-\textit{modulus} sirve para obtener la distancia entre el origen y el punto dado como un valor escalar. Como esta distancia puede ser mayor que uno (el punto (1,1); por ejemplo), y como este numero solo puede ser positivo, devuelve una uint32 en lugar de una int32 para poder llegar hasta el 2, cambiando su imagen de [-1,1] a [0,2]. Esto es importante porque \textbf{el modulus tiene sus propias unidades}, por lo cual no se puede utilizar sin más como unidad en el espacio. Si guardas el valor de retorno en una int en lugar de una uint y el resultado era mayor que 1 te devolvera un número negativo, lo cual es imposible pues las distancias (escalares) son positivas necesariamente. 
+Los métodos phase y modulus operan en dicho espacio. \textit{phase} mide los ángulos entre las rectas formadas por los puntos dados y el punto de origen con el vector (1,0). Esto es especialmente útil para comparar angulos, ya que la fase entre ambos es \textit{``la fase del primero con el eje x - la fase del segundo con el eje x''}. Osea, se les hace fase a ambos vectores y se restan los resultados. \par
+\textit{modulus} sirve para obtener las distancias entre el origen y los puntos dados como valores escalares. Como esta distancia puede ser mayor que uno (el punto (1,1); por ejemplo), y como este numero solo puede ser positivo, devuelve una uint32 en lugar de una int32 para poder llegar hasta el 2, cambiando su imagen de [-1,1] a [0,2]. Esto es importante porque \textbf{el modulus tiene sus propias unidades}, por lo cual no se puede utilizar sin más como unidad en el espacio. Si guardas el valor de retorno en una int en lugar de una uint y el resultado era mayor que 1 te devolvera un número negativo, lo cual es imposible pues las distancias (escalares) son positivas necesariamente. 
 
 \subsubsection{Encoder}
 El encoder o codificador rotatorio es un periférico que traduce señales de pulsos a posición angular representada con un contador de giros, y es muy usado en el mundo de los motores y la electrónica para obtener posición y cambio de posición a partir del diámetro de la rueda y su posición angular. De este sale también el encoder lineal, que traduce las mismas señales a desplazamientos lineales directamente (los contadores representan una distancia igual a la distancia de las bandas del encoder lineal). \par
@@ -1121,14 +1124,178 @@ Para cualquier cálculo que requiera del uso de frecuencia (o de periodo, que es
 \end{figure}
 \par \vspace{0.3cm}
 
-Este código ejemplo obtiene la frecuencia con la que se pasa por el bucle while. Esto puede ser extremadamente útil para poder analizar el código, pues como se ha mencionado anteriormente el periodo es la inversa de la frecuencia. \par
-Digamos que se obtiene 200 000 Hz; la inversa sería 5 us, y ese sería el tiempo que ocupa convocar el método count en total. Adicionalmente, si añadieramos un segundo método, y la frecuencia cambiara a 50 000 Hz; se podría calcular el periodo de todo; 20 us, y restarle el de todos los métodos que ya conozcamos y esten en el while; el contador en este caso. 20 - 5 son 15 us y ese sería el tiempo en la práctica que consume convocar nuestro segundo método.  
+Este código ejemplo obtiene la frecuencia con la que se pasa por el bucle while. Esto puede ser extremadamente útil para poder analizar el código, pues muchas veces los requisitos funcionales de un código de microcontrolador dado se definen en mínimo de veces por segundo. \par
+Una vez se tenga el bucle de código que se quiere comprobar en marcha (sea un bucle while o una alarma que se repite continuamente), una forma muy sencilla de comprobar que se cumplen los requisitos es poner dentro del método en cuestión la función count y obtener la frecuencia con la que se ejecuta. Esto permitirá ver si realmente se cumple el concepto del código o hay algo afectando a la ejecución. \par
+Muchas veces puede haber una colisión o una condición de carrera entre dos métodos que se deban ejecutar a una frecuencia dada, sea porque tardan más de lo debido o por que suceden las interrupciones que lo activan al mismo tiempo. Esta herramienta está para identificar esos casos y separar la teoría de la práctica. 
 \par \vspace{0.3cm}
-Además de sus utilidades de depurado puede servir para hacer cálculos basados en formulas físicas para hacer un predictor.  
+Además de sus utilidades de depurado puede servir para hacer cálculos basados en formulas físicas para hacer un predictor. 
 
 \subsubsection{StopWatch}
-StopWatch es la contraparte de Counter, y hace la función de cronómetro; pero en lugar de ofrecer su información en unidades métricas la ofrece en ciclos de reloj. Para usarlo, simplemente se inicia una instancia de StopWatch donde se quiera comenzar a contar y se usa el método Stop para terminar de contar y recibir el 
+StopWatch es la contraparte de Counter, y hace la función de cronómetro; pero en lugar de ofrecer su información en unidades métricas la ofrece en ciclos de reloj. Para usarlo, simplemente se inicia una instancia de StopWatch donde se quiera comenzar a contar y se usa el método Stop para terminar de contar y recibir el resultado de la diferencia. 
+\par \vspace{0.3cm}
+Al igual que Counter, StopWatch sirve como herramienta de depurado de código. StopWatch ofrece en nano segundos la diferencia de tiempo desde que se inicio hasta que se para, permitiendo analizar cuanto tiempo le cuesta al microprocesador ejecutar uno o más métodos. 
+\begin{figure}[h]
+  \begin{lstlisting}
+    Counter contador(100);
+    ST-LIB::start();
+    while(1){
+      Stopwatch::start("mysw");
+      contador.count();
+      Stopwatch::stop("mysw");
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de código de Stopwatch que cuenta cuanto tiempo ocupa el contador}
+  \label{StopWatchCode}
+\end{figure}
+\par \vspace{0.3cm}
+En el código de la figura \ref{StopWatchCode} se muestra como funciona su uso. A diferencia de la mayoría de la ST-LIB LOW no usa clases, y esto es debido a que una vez se termina el uso de StopWatch debe eliminarse de memoria. \par 
+Para evitar que el usuario tenga que gestionar la memoria y pueda sufrir fugas\footnote{la fuga de memoria es cuando el código compilado pide continuamente espacios de memoria sin liberarlos hasta que toda la memoria se llena, el puntero apunta a un valor inexistente, y la ejecución termina con un error.}, se ha decidido que funcionara como una librería estática, pero en lugar de usar id numéricas recibe una string que hace de pseudónimo para el reloj. El valor \textit{``mysw''} es meramente el nombre que se le ha designado a ese StopWatch, y cualquier string es un valor válido.
+\par \vspace{0.3cm}
+StopWatch también sirve para hacer cálculos físicos o predictores que requieran diferencial de tiempo en sus formulas. El error en la diferencia de tiempo que devuelve StopWatch es menor que \pm2 / \textit{(velocidad de reloj del microprocesador)} segundos si no se tiene en cuenta la deriva de susodicho reloj.  
 
+\subsubsection{DigitalOutput}
+DigitalOutput es el módulo de la ST-LIB LOW que abstrae el módulo Core con el mismo nombre. Su objetivo es hacer más facil el uso de los GPIO para los usuarios, encargandose de activar los periféricos cuando se active la placa, gestionar las id de forma interna, y de añadir nuevas funcionalidades. 
+\par \vspace{0.3cm}
+Los métodos de DigitalOutput son el constructor, turn\_on, turn\_off, set\_pin\_state, y toggle. Como su nombres indican, permiten crear el objeto, encender, apagar, cambiar el estado, y invertir el estado actual; respectivamente. Aqui un ejemplo de código: 
+\begin{figure}[H]
+  \begin{lstlisting}
+    DigitalOutput out(PA5);
+    ST-LIB::start();
+    while(1){
+      out.toggle();
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de DigitalOutput que hará cambiar de estado lo mas rápido posible al pin PA5}
+  \label{DigitalOutputCode}
+\end{figure}
+\par \vspace{0.3cm}
+Este código cambiara el estado del pin out lo más rápido que pueda. No se recomienda usar este código con ningún led, o en general con ningún componente eléctrico sensible, pues cambiar tan rápido de estado podría desgastarlo rapidamente. Un código más razonable sería que hubiese una espera al final del bucle; aunque podría provocar problemas al estar perdiendo valioso tiempo de proceso en una espera vacía. \par
+El mejor código para un caso así sería introducir el toggle dentro de una interrupción que ocurriese periodicamente, usando; por ejemplo, el módulo time: 
+\begin{figure}[H]
+  \begin{lstlisting}
+    DigitalOutput out(PA5);
+    ST-LIB::start();
+    Time::register_low_precision_alarm(1000, out.toggle);
+    while(1){
+      /*dejamos el while para que el programa no termine*/
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de DigitalOutput que hará cambiar de estado al Pin PA5 cada 100 ms}
+  \label{DigitalOutputBetterCode}
+\end{figure}
+
+\subsubsection{ErrorHandler}
+El ErrorHandler es el módulo de retroalimentación de usuario por excelencia de la librería. Funciona usando la función printf (que la librería por defecto sobrescribe para que use el módulo UART) para enviar no solo el error que se le introduzca, si no además información adicional de depurado como el lugar en el que sucedio dentro del código. 
+\begin{figure}[h]
+  \begin{lstlisting}
+    ST-LIB::start();
+    ErrorHandler("Ha habido un error");
+    while(1){
+      ErrorHandler("Ha habido un error");
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de ErrorHandler}
+  \label{ErrorHandlerCode}
+\end{figure}
+En el código ejemplo de la figura \ref{ErrorHandlerCode} primero se dará un error en la linea debajo del start; y luego se darán continuamente errores en la linea debajo del bucle. Importante notar, que aunque el usuario haya introducido la misma cadena de caracteres en ambos errores, serán distinguibles gracias a la información adicional que provee el ErrorHandler. 
+\par \vspace{0.3cm}
+Una cosa importante del ErrorHandler es que esta vinculado a muchos módulos superiores de la librería. Uno de ellos es el ProtectionManager, un módulo especial que se encargará de cambiar el estado de la placa y su funcionamiento cuando se de una situación en la que el código previsto ya no pueda recuperarse a un estado funcional. 
+\par
+El ErrorHandler esta vinculado de base al ProtectionManager, y cuando salte activará todas las protecciones de este. Así que se recomienda usar el ErrorHandler unicamente para errores. 
+
+\subsubsection{HalfBridge}
+%TODO
+
+\subsubsection{Math}
+El módulo Math trata de abstraer el módulo CORDIC de la ST-LIB Core, gestionando los casos marginales, evitando divisiones por cero, y añadiendo nuevas funcionalidades que se puedan calcular con suficiente velocidad para que sea razonable usarla en lugar de arm\_math. \par \vspace{0.3cm}
+Math posee las mismas funciones que CORDIC más la tangente y arcotangente, en los métodos tg y atg. Hay algunas funcionalidades de CORDIC que no se pueden acceder desde Math directamente por simplicidad; como poner múltiples peticiones de calculos en una sola invocación del método. Este es un compromiso que toma el módulo Math para mantener su uso simple a cambio de perder algo de versatilidad y eficiencia en situaciones específicas. \par \vspace{0.3cm}
+Esta perdida de velocidad aumenta la duración de un ciclo del bucle que haga múltiples calculos iguales con distintos valores en alrededor de un 13\% (depende de la operación específica), pero quitando el caso concreto en el que se desee hacer centenas de veces el mismo cálculo sin operaciones intermedias, la velocidad de Math es muy similar a la de CORDIC; e incluso en este caso supera math\_arm con lógica de int en un factor medio de 2.5 (dependiente de la operación específica).
+\par \vspace{0.3cm}
+En cuanto al uso de Math, es tan sencillo como convocar la función y recibir el valor que retorna: 
+\begin{figure}[h]
+  \begin{lstlisting}
+    int32_t angle = pi/3*MAX_INT_VALUE; /* pi/3 
+    int32_t tan = 0;
+    radians*/
+    ST-LIB::start();
+    while(1){
+      tan = Math::tg(angle);
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de uso de tangente con Math}
+  \label{MathCode}
+\end{figure}
+\par \vspace{0.3cm}
+Como se puede ver ya no hace falta reservar punteros a las variables necesariamente, lo cual es una de las ventajas de no poder recibir más de un valor por llamada. Como estos punteros no son necesarios y en lugar se recibe el valor en el retorno de la función, se pueden anidar llamadas. 
+
+\begin{figure}[H]
+  \begin{lstlisting}
+    int32_t angle = pi/3*MAX_INT_VALUE; /* pi/3 
+    int32_t tan = 0;
+    radians*/
+    ST-LIB::start();
+    while(1){
+      tan = Math::tg(Math::atg(Math::tg(angle)));
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de uso de múltiples llamadas con Math}
+  \label{MathNestedCode}
+\end{figure}
+
+\subsubsection{Sensors}
+El grupo de módulos Sensors cumplen todos la misma función: abstraer las lecturas de periféricos con el uso de clases. Hay un caso especial, el del encoder, que trataremos en su propia sección. 
+\par \vspace{0.3cm}
+DigitalSensor es el primero de estos módulos y, como su nombre indica; codifica un sensor digital. Su funcionamiento es sencillo: Creas el objeto antes del start con una referencia a la variable que se desee modificar, y despues cuando se desee se convoca la función \textit{read} que actualiza el valor de susodicha variable. \par
+Como normalmente estos valores son accedidos por muchas funciones al mismo tiempo se ha evitado que devolviese en el read el valor mencionado para que el usuario no convocara múltiples veces la función de lectura \textit{read} para obtener el mismo valor; y redujera accidentalmente la velocidad de su código. En su lugar, se debe decidir a que velocidad se actualiza el valor del puntero y acceder a este, que contiene siempre el valor mas actualizado, siempre que se desee; para guiar al programador a estructurar de forma correcta su código, pues aunque este sea más abstracto sigue siendo código de microcontrolador. 
+\par \vspace{0.3cm}
+El siguiente módulo del grupo es LinearSensor, que trata de codificar un sensor análogo pero con la abstracción añadida de escalar y desplazar el valor para ponerlo en las unidades adecuadas dentro del puntero. Si se desea obtener el voltaje, meramente con poner el escalado \textit{slope} a 1 y el desplazamiento \textit{offset} a 0 se conseguira en voltios la señal recibida. \par
+LinearSensor sigue las mismas guias de estructura que DigitalSensor, y fuerza al usuario a acceder al valor de puntero directamente en lugar de obtener el valor del \textit{read} para evitar que abrume con demasiadas peticiones de lectura al controlador. Añadir que LinearSensor es una clase que hace uso de templates para funcionar con el tipo de variable preferida por el usuario (normalmente una variante de la coma flotante)
+\par \vspace{0.3cm}
+Otra abstraccion de lectura de periféricos básica es el LookupSensor, que tiene como objetivo abstraer las \textit{Lookup Table}, tablas de valores preprocesados con el objetivo de transformar una formula matemática de alto coste de procesado a un único acceso a memoria a cambio de tener que ocupar dicha memoria. \par
+Su funcionalidad es sencilla: recibe una pequeña matriz que representa la tabla de valores de un tamaño deseado por el usuario; y separa el rango de valores posibles que puede recibir en análogo (normalmente de 0 a 3.3V, se puede cambiar con una variable denominada REFERENCE\_VOLTAGE) entre todas las entradas de la matriz. En la figura \ref{SensorsCode} un ejemplo de estos tres tipos de Sensor, funcionando todos al mismo tiempo
+
+\begin{figure}[H]
+  \begin{lstlisting}
+    PinState sensor_state = OFF;
+    float sensor_voltage = 0;
+    float table[] = {1,10,100,1000}
+    float table_lecture = 0;
+    DigitalSensor dsensor(PA5, &sensor_state);
+    LinearSensor lsensor(PA6, 1, 0, &sensor_voltage);
+    LookupSensor tsensor(PA0, table, &table_lecture);
+    ST-LIB::start();
+    while(1){
+      dsensor.read();
+      lsensor.read();
+      tsensor.read();
+      printf(table_lecture);
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de uso de DigitalSensor, LinearSensor y LookupSensor}
+  \label{SensorsCode}
+\end{figure}
+\par \vspace{0.3cm}
+Este ejemplo guarda el estado de PA5 en sensor\_state; el voltaje de PA6 en sensor\_voltage, y el valor de la \textit{look up table} en table\_lecture. Importante pasar los valores por referencia (\&) o no los actualizara. Además, imprime el valor obtenido por la LookupTable accediendo directamente a la variable, como se ha mencionado previamente. \par
+En el ejemplo de la figura \ref{SensorsCode} Table\_lecture contendra el valor 1 si el voltaje se encuentra entre $[0, 0.825)$, el valor 10 si se encuentra entre $[0.825, 1.65)$, y así hasta llegar a 3.3 v; que es el previamente mencionado valor de referencia. 
+\par \vspace{0.3cm}
+SensorInterrupt es una versión especializada de DigitalSensor que además abstrae ExternalInterrupt, activando una interrupción siempre que él estado del sensor cambie de la forma indicada en su constructor. \par 
+De base esta configurado para que la interrupción se active siempre que cambie de baja a alta (\textit{RISING}), pero las opciones de alta a baja o ambas también estan disponibles. Cuando esta interrupción se active, la función que se paso en su constructor se ejecutará (a menos que otra interrupción de mayor importancia este en marcha, en cuyo caso se encolará).
+Un ejemplo de código del SensorInterrupt:
+\begin{figure}[H]
+  \begin{lstlisting}
+    PinState sensor_state = OFF;
+    counter = 0;
+    SensorInterrupt isensor(PA5, [&](){counter++;}, 
+    &sensor_state, ExternalInterrupt::FALLING);
+    ST-LIB::start();
+    while(1){
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de uso de SensorInterrupt}
+  \label{SensorInterruptCode}
+\end{figure}
+\par \vspace{0.3cm}
+Como se puede comprobar en este fragmento de código, en ningún momento se hace una lectura. Sin embargo, la interrupción sucede aunque no se este actualizando el valor; pues esa es la idea de la interrupción. Hay que tener en cuenta que no necesariamente todos los pines tienen la capacidad de usar EXTI por lo que puede fallar si se usa un pin sin esta habilidad. Ante la duda, se recomienda revisar el datasheet del microcontrolador o usar el .ioc para revisar si esta entre las opciones. 
 
 \section{Testeo y profiling de la librería}
 \subsection{Testing automático}
