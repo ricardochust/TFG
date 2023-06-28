@@ -62,4 +62,10 @@
   \url{https://www.can-cia.org/can-knowledge/can/can-fd/}
 \BIBentrySTDinterwordspacing
 
+\bibitem{web:github:EncoderWiki}
+\BIBentryALTinterwordspacing
+``Encoder wiki inside st-lib.'' [Online]. Available:
+  \url{https://github.com/HyperloopUPV-H8/ST-LIB/wiki/Encoder-Sensor}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}

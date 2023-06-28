@@ -402,7 +402,7 @@ Configurar Pins es bastante sencillo, se crea un objeto Pin que indique el puert
 \par
 La funcionalidad alternativa es una configuración que se le da a los pines cuando se quiere utilizar utilidades especiales que no entren en el uso de perifericos básicos (INPUT, OUTPUT, ANALOG, EXTI, o NOT\_USED). 
 \par
-Lo que pueda hacer cada Pin con estas funcionalidades depende de la placa que se este usando, y por tanto requiere de revisar el datasheet del microcontrolador que se esté usando. Por ejemplo no todos los pines pueden hacer de PWM. El project template ya viene con una configuración ejemplo en el que se da todas las opciones para la familia H7, pero si se quiere usar otra familia u otra configuración se debe revisar el datasheet para poder usar las funciones alternativas. \par \vspace{0.3cm}
+Lo que pueda hacer cada Pin con estas funcionalidades depende de la placa que se este usando, y por tanto requiere de revisar la ficha técnica del microcontrolador que se esté usando. Por ejemplo no todos los pines pueden hacer de PWM. El project template ya viene con una configuración ejemplo en el que se da todas las opciones para la familia H7, pero si se quiere usar otra familia u otra configuración se debe revisar la ficha técnica para poder usar las funciones alternativas. \par \vspace{0.3cm}
 Como un pequeño indicador para la familia H7; AF0 y AF15 son control de sistema, AF11 son Ethernet, AF14 es UART, y el resto son timers (principalmente para PWM) y otros protocolos de comunicación. A continuación, un pequeño extracto de project template para que se vea como se declaran los pines: 
 \begin{figure}[h]
 \begin{lstlisting}
@@ -469,7 +469,7 @@ En cuanto a los TypeDef normales suelen estar ya declarados con el mismo nombre 
 \end{figure}
 \par \vspace{0.3cm}
 
-Cual \textit{handler} y cual instancia de UART escoger depende de como esten conectados los pines en el microcontrolador, así que será necesario mirar en el datasheet para los pines específicos a que UART están conectados. Alternativamente se puede abrir el .ioc para ver que opciones tiene el pin; pero se recomienda no modificarlo o si no este generará código nuevo pisando el código que se tuviese anteriormente. 
+Cual \textit{handler} y cual instancia de UART escoger depende de como esten conectados los pines en el microcontrolador, así que será necesario mirar en la ficha técnica para los pines específicos a que UART están conectados. Alternativamente se puede abrir el .ioc para ver que opciones tiene el pin; pero se recomienda no modificarlo o si no este generará código nuevo pisando el código que se tuviese anteriormente. 
 \par 
 Si los pines no estan conectados al mismo UART o uno de los dos no está conectado a ninguno, no se podrán utilizar (es una limitación de hardware).  
 \par \vspace{0.3cm}
@@ -609,7 +609,7 @@ Los servicios por su parte abstraen las macros más comunes en el mundo del firm
 La mayoría de veces gestiona estos errores a través del ErrorHandler, una clase que se dedica específicamente a dar información retro-alimentada al programador a partir de mensajes en el protocolo de comunicación preferido (Viene configurado para usar el protocolo FD-CAN, pero con un cambio a dos lineas de un método se pueden usar cualquier otro de los protocolos ofrecidos por la librería), y de parar el micro en caso de fallo de una forma más segura en lugar de usar un \textit{Hard Fault}. 
 
 \subsubsection{Pin}
-La clase Pin es el primer nivel de abstracción sobre la librería HAL y el código C con registros. Es una estructura de datos cuyo propósito es que los usuarios puedan identificar el Pin rápidamente en el datasheet y escribirlo directamente en el código sin tener que hacer traducciones ni convocar métodos. Esta pertenece a los Modelos de la ST-LIB Core.
+La clase Pin es el primer nivel de abstracción sobre la librería HAL y el código C con registros. Es una estructura de datos cuyo propósito es que los usuarios puedan identificar el Pin rápidamente en la ficha técnica y escribirlo directamente en el código sin tener que hacer traducciones ni convocar métodos. Esta pertenece a los Modelos de la ST-LIB Core.
 \par \vspace{0.3 cm}
 Esta estructura se encarga de abstraer el concepto de los pines de la micro en su totalidad. Lo primero que hace es mapear los valores de registro de los pines a unos valores más entendibles para el humano, usando los nombres que se le dan en la núcleo para ello. Por ejemplo, si a la configuración del pin A5 se accede con el registro \textit{0x400000001802000000000020} permite al usuario obtener este registro dando los valores A y 5 a los enum\footnote{Un enum es una estructura de C que se dedica a enumerar distintos valores para distintos nombres, similar al concepto de una variable o un mapa pero se soluciona en tiempo de compilación, por lo que no afecta a la velocidad del programa}   GPIOPin y GPIOPort. 
 \par \vspace{0.3 cm}
@@ -1295,7 +1295,204 @@ Un ejemplo de código del SensorInterrupt:
   \label{SensorInterruptCode}
 \end{figure}
 \par \vspace{0.3cm}
-Como se puede comprobar en este fragmento de código, en ningún momento se hace una lectura. Sin embargo, la interrupción sucede aunque no se este actualizando el valor; pues esa es la idea de la interrupción. Hay que tener en cuenta que no necesariamente todos los pines tienen la capacidad de usar EXTI por lo que puede fallar si se usa un pin sin esta habilidad. Ante la duda, se recomienda revisar el datasheet del microcontrolador o usar el .ioc para revisar si esta entre las opciones. 
+Como se puede comprobar en este fragmento de código, en ningún momento se hace una lectura. Sin embargo, la interrupción sucede aunque no se este actualizando el valor; pues esa es la idea de la interrupción. Hay que tener en cuenta que no necesariamente todos los pines tienen la capacidad de usar EXTI por lo que puede fallar si se usa un pin sin esta habilidad. Ante la duda, se recomienda revisar la ficha técnica del microcontrolador o usar el .ioc para revisar si esta entre las opciones. 
+
+\subsubsection{EncoderSensor}
+El EncoderSensor es el módulo que abstrae el Encoder, transformando el contador en un medidor de posición, velocidad y aceleración. Este módulo se estructura de la misma forma que el resto de módulos Sensor, pero debido a su complejidad y sus requisitos funcionales se ha decidido dar un apartado entero para este. 
+\par \vspace{0.3cm}
+Para calcular la derivada de la posición en el tiempo se ha usado una aproximación del cálculo conocida por su eficiencia, la aproximación por diferencia finita regresiva \cite{web:github:EncoderWiki}. Dentro del código, esto significa guardar en una matriz múltiples puntos separados por una distancia en el tiempo; a los que dentro del código se les referirá como \textit{frames}, y obtener la diferencia entre los dos, dividirla entre la distancia en el tiempo; y el resultado es la derivada aproximada. 
+\par \vspace{0.3cm}
+Esta aproximación es finita porque produce el resultado de un cálculo hecho dentro de un marco finito, es diferencial porque produce sus valores a partir de la diferencia entre dos puntos respecto a una variable (en este caso el tiempo); y es regresiva porque solo usa el punto que se quiere medir y los anteriores, nunca los posteriores. \par 
+No se usan los valores posteriores debido a que esto requeriría un predictor y se ha comprobado en pruebas que el intercambio de ganancia de precisión por perdida de velocidad de código no es razonable; y de ser necesario hay otras medidas mas efectivas que tomar antes del uso de un predictor. 
+\par \vspace{0.3cm}
+Esta formula es extremadamente rápida y tiene el potencial de ofrecer una precisión cercana ${\pm}paso/2$ donde el paso es el desplazamiento necesario para que el encoder complete una rotación de 360\textdegree en su señal PWM. Sin embargo, requiere de calibrado de las variables para conseguir este nivel de cálculo. 
+\par \vspace{0.3cm}
+Las variables a modificar para el calibrado son: COUNTER\_DISTANCE\_IN\_METERS, N\_FRAMES, y FRAME\_SIZE\_IN\_SECONDS. La primera de las variables, COUNTER\_DISTANCE\_IN\_METERS; define cuanta distancia real representa cada paso del encoder, lo cual dependerá del ángulo que este represente y del perímetro de giro (en caso de no ser lineal). Para ello, se deberá consultar la ficha técnica del encoder específico que se esté usando y del dispositivo que se trate de medir. \par
+N\_FRAMES y FRAME\_SIZE\_IN\_SECONDS son, por otra parte, variables que afecta a como se captura el valor de cálculo. N\_FRAMES representa cuantos \textit{frames} guarda el EncoderSensor antes de sobreescribirlos, y FRAME\_SIZE\_IN\_SECONDS representa la distancia mínima entre dos \textit{frames} para que sean guardados. Aumentar cualquiera de las dos reduce el efecto de las perturbaciones y aumenta la precisión; pero también aumenta el tiempo de medida absoluta. Esto es, el tiempo que tarda desde que el objeto real a cambiado de una velocidad A a una velocidad B en actualizar la medida dada por el programa completamente de A a B. Este tiempo es, exactamente, (N\_FRAMES - 1) * FRAME\_SIZE\_IN\_SECONDS. 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.45]{Imagenes/grafica_ejemplo.PNG}
+  \caption{Grafica de ejemplo de una curva de posicion  tiempo}
+  \label{PosTimeGraphic}
+\end{figure}
+
+\par \vspace{0.3cm}
+En el diagrama \ref{PosTimeGraphic} se puede observar un ejemplo de una gráfica generada a partir de la posición del objeto de medida en el tiempo, estando la posición en el eje y (metros) y el tiempo en el eje x (segundos). Asumiendo que su trayecto termina en el punto 0.1 m, y por ende en el segundo diez esta parado; el cálculo de velocidad del EncoderSensor tardará el tiempo de medida absoluta en indicar, desde el segundo diez, que nuestro objeto se ha parado completamente. \par
+Asumiendo un N\_FRAMES igual a 3 y un FRAME\_SIZE\_IN\_SECONDS de 1.0 s, en el segundo 10 indicará 0.125 m/s, en el 11 0.085 m/s, y en el 12 0.0 m/s. Como se puede observar, no alcanza la velocidad real hasta que han pasado dos segundos. Este efecto se puede reducir decrementando el valor de cualquiera de las dos variables, pero esto también aumentará el efecto de perturbaciones y reducirá la precisión de medida. \par
+Adicionalmente, aumentar N\_FRAMES ocupa mas espacio en memoria (pues aumenta el tamaño de la matriz de guardado), y aumentar FRAME\_SIZE\_IN\_SECONDS provoca mayor retardo en la actualización de los valores, pues estos solo se actualizan cada nuevo \textit{frame}. Unos valores razonables rondan N\_FRAMES 500 y  FRAME\_SIZE\_IN\_SECONDS 0.0007, pero esto realmente depende de los requisitos del usuario. 
+\par \vspace{0.3cm}
+Una vez calibrado, a la hora de programar el código es igual de simple que el resto de la familia de módulos Sensor. Se declara antes del STLIB::start(), se activa \footnote{el EncoderSensor no se activa solo en el start porque comienza a tomar medidas en ese punto, que considera el segundo 0. Como cuando se desee que comience a medir y tome de marco de referencia el segundo 0 depende del usuario, se a optado por no activarlo con el STLIB::start()} y se toman medidas de forma cíclica. 
+\begin{figure}[h]
+  \begin{lstlisting}
+    float position = 0;
+    float speed = 0;
+    float acceleration = 0;
+    float direction_vector = 0;
+    EncoderSensor encode(PC6,PC7,&position,&direction,&speed,&acceleration);
+    ST-LIB::start();
+    encode.start();
+    while(1){
+      encode.read();
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de uso de EncoderSensor}
+  \label{EncoderSensorCode}
+\end{figure}
+\par \vspace{0.3cm}
+Lo único de relevancia que queda indicar en este código es que la variable FRAME\_SIZE\_IN\_SECONDS solo funciona mientras se ejecute el método read() del EncoderSensor con un periodo de tiempo entre ejecuciones estrictamente menor que FRAME\_SIZE\_IN\_SECONDS. En el caso contrario, el código seguira funcionando pero en lugar de usar FRAME\_SIZE\_IN\_SECONDS para la distancia entre \textit{frames}, usará el tiempo entre ejecuciones pues es en estas donde se obtienen los \textit{frames}. \par
+Cada \textit{frame} guarda el punto en el tiempo en el que fue calculado, así que el cálculo no se verá afectado directamente si hay algun retraso, pero si de forma consistente se ejecuta con menor velocida de la requerida por su FRAME\_SIZE\_IN\_SECONDS, se puede comprometer el tiempo de medida absoluta y la velocidad de actualización de los valores. \par \vspace{0.3cm}
+Se recomienda poner el read() o bien en el bucle permanente del código (como se ve en el diagrama \ref{EncoderSensorCode}) o bien en una interrupción periódica para asegurar su correcto funcionamiento. 
+
+\subsubsection{StateMachine}
+StateMachine es un módulo de abstracción del concepto de una máquina de estados, un concepto muy usado en el mundo de la programación de microcontroladores pues permite separar los requisitos funcionales entre varios estados; y añadir un funcionamiento especial para cuando el producto se encuentre en un estado irrecuperable por código, un estado de emergencia conocido generalmente como 
+\textit{FAULT}. \par \vspace{0.3cm}
+Para poder usarlo, primero se deben de crear los posibles estados en los que el código se puede encontrar. Estos se pueden definir con números, con variables \textit{uint8}, o bien con enumeraciones de C++ (este último es el más recomendado meramente por orden de código). Una vez se tienen los estados de la máquina, se debe crear la propia máquina de estados e insertar estos estados.
+\begin{figure}[h]
+  \begin{lstlisting}
+    enum states{
+      INITIAL,
+      OPERATIONAL,
+      FAULT
+    }
+    int main(){
+      ST-LIB::start();
+      StateMachine principalStateMachine();
+      add_state(INITIAL);
+      add_state(OPERATIONAL);
+      add_state(FAULT);
+      while(1){
+        ST-LIB::update();
+      }
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de la declaración de una máquina de estados}
+  \label{StateMachineDefCode}
+\end{figure}
+\par \vspace{0.3cm}
+
+En el código de el diagrama \ref{StateMachineDefCode} se puede ver como se vería un \textit{main} que incluyese una máquina de estados con tres estados: INITIAL, OPERATIONAL y FAULT. Una vez se tienen los estados, se deben introducir las transiciones. 
+\par \vspace{0.3cm}
+Para introducir las transiciones hay dos posibles opciones. La primera es crear un método que compruebe una condición y en caso de cumplirse fuerce la transición con el método force\_change\_state() de la clase StateMachine y convocarlo cada cierto tiempo con una interrupción, dentro de otro método, o en el bucle. La segunda opción es crear una función que devuelva verdadero cuando se cumpla una condición, y usar el método add\_transitions() para añadir una transición de un estado A a otro B cuando se cumpla la condición. Esta comprobación se hace dentro del método check\_transitions(); que también pertenece a la clase y se deberá convocar periodicamente. 
+\par \vspace{0.3cm}
+Lo más común es usar la segunda opción, pues permite controlar en que estados se comprueba esta condición, a que estados llevará cuando se active, y permite centralizar en una única llamada el control de la máquina de estados, ayudando a organizar el código. \par 
+Sin embargo, la primera opción tiene también sus casos de uso, pues permite crear cambios de estado más críticos, que se comprueben aparte del resto de transiciones y fuercen inmediatamente el cambio de estado nada más se cumplan.
+
+\begin{figure}[h]
+  \begin{lstlisting}
+    enum states{
+      INITIAL,
+      OPERATIONAL,
+      FAULT
+    }
+
+    int main(){
+      ST-LIB::start();
+      StateMachine principalStateMachine();
+      add_state(INITIAL);
+      add_state(OPERATIONAL);
+      add_state(FAULT);
+
+      add_transition(INITIAL, OPERATIONAL, start_success);
+      add_transition(INITIAL, FAULT, start_failure);
+      add_transition(OPERATIONAL, FAULT, fault_values);
+
+      Time::register_high_precision_alarm(100,[&](){
+        if(more_important_fault_values()){
+          principalStateMachine.force_change_state(FAULT);
+        }
+      });
+
+      while(1){
+        ST-LIB::update();
+        principalStateMachine.check_transitions();
+      }
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de como añadir transiciones a una máquina de estados}
+  \label{StateMachineTransitionCode}
+\end{figure}
+\par \vspace{0.3cm}
+
+Para evitar abarrotar el código con demasiadas líneas en el diagrama \ref{StateMachineTransitionCode}, no se ha escrito la definición de las funciones start\_success, start\_failure, fault\_values, o more\_important\_fault\_values; pero todas estas són funciones que retornan un valor booleano, que deberá definir el propio usuario dependiendo de sus requisitos funcionales. \par
+Dentro del mencionado diagrama, se puede observar tanto la primera forma de definir transciones, las cuales han sido insertadas dentro de una interrupción que se cumplirá cada 100 microsegundos; como la segunda forma, que se comprobará cada vez que el bucle permanente se ejecute, y se define a traves de los add\_transitions, los estados que deben transicionar, y la función que retorna verdadero si se cumplen las condiciones. 
+\par \vspace{0.3cm}
+En este punto ya se tiene una máquina de estados funcional, de la cual se puede substraer el estado en cualquier instante a traves de la variable current\_state dentro del objeto, y siempre que las comprobaciones se hagan correctamente se obtendrá el estado deseado. Sin embargo, el módulo no termina aquí, pues tiene funcionalidades añadidas; y está diseñado para que la mayoría del código se ejecute dentro del objeto StateMachine. 
+\par \vspace{0.3cm}
+Se puede añadir código que se ejecute inmediatamente tras una transición, código que se ejecute periodicamente a través de una alarma unicamente en ciertos estados, y anidar máquinas de estados a estados de otra máquina de estados que solo se actualicen y ejecuten sus funciones mientras su máquina padre esté en el estado al que fueron anidadas; sin límite de niveles de anidamiento. 
+\begin{figure}[h]
+  \begin{lstlisting}
+    enum states{
+      INITIAL,
+      OPERATIONAL,
+      FAULT
+    }
+
+    int main(){
+      ST-LIB::start();
+      StateMachine principalStateMachine();
+      add_state(INITIAL);
+      add_state(OPERATIONAL);
+      add_state(FAULT);
+
+      principalStateMachine.add_enter_action(entry_fault, FAULT);
+      principalStateMachine.add_enter_action(entry_operational, OPERATIONAL);
+      principalStateMachine.add_exit_action(exit_initial, INITIAL);
+      principalStateMachine.add_low_precision_cyclic_action(
+        cyclic_operational, 
+        std::chrono::milliseconds(10),
+        OPERATIONAL
+      );
+
+      while(1){
+        ST-LIB::update();
+        principalStateMachine.check_transitions();
+      }
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de como usar las herramientas de StateMachine}
+  \label{StateMachineUtilitiesCode}
+\end{figure}
+\par \vspace{0.3cm}
+
+En el código del diagrama \ref{StateMachineUtilitiesCode} se ha removido las transiciones y no se han definido los métodos entry\_fault, entry\_operational, exit\_initial, y cyclic\_operational para evitar, de nuevo, abarrotar el código con lineas. Las transiciones se pueden observar en el diagrama \ref{StateMachineTransitionCode} y los cuatro métodos tienen un código arbitrario, definido por el usuario, que han de ejecutar cuando se cumpla la condición a la que se vincularon y no retornan nada (return type void) obligatoriamente. 
+\par \vspace{0.3cm}
+Además, se puede ver que ahora se usa la librería de C++ chrono para introducir la frecuencia con la que se deben ejecutar las acciones cíclicas. Lo único que hay que apuntar sobre esto es que las acciones cíclicas siguen teniendo las mismas limitaciones que las alarmas del módulo Time, por lo que hacer que una acción cíclica de baja precisión se ejecute cada menos de un milisegundo, una media precisión cada menos de 50 microsegundos, o una alta precisión cada menos de 1 microsegundo; no cumplirá con las estampas de tiempo indicadas pues está fuera de su rango de control. 
+
+\subsection{ST-LIB High}
+ST-LIB High es la capa de mayor abstracción de toda la librería, y usarla puede traer grandes beneficios de seguridad, diseño y velocidad de desarrollo; pero también puede añadir un coste de ejecución alto.
+\subsubsection{Notification}
+Notification es el módulo de abstracción de los paquetes TCP de la librería. Esta abstracción esta diseñada para simular la difusión masiva a partir de comunicar a todas sus conexiones TCP las notificaciones recibidas. \par
+Además, las Notification están diseñadas para comunicar cadenas de caracteres y su objetivo es hacer llegar al servidor software que se comunique con el proyecto información en un formato mas amigable para las comunicaciones escalables; siendo un ejemplo JSON.
+ \par \vspace{0.3cm}
+Su construcción es igual que la de un paquete TCP, con la ligera variación de que el callback es obligatorio y los resultados los aloca dentro del propio objeto en lugar de en un puntero externo que se le deba pasar en el constructor. 
+\begin{figure}[h]
+  \begin{lstlisting}
+    ST-LIB::start();
+    bool value = false;
+    Notification not_and_spread(10,[&](){value = !value;});
+    Notification spread(20,nullptr,"spread me");
+    ServerSocket incoming_communication(IPV4("192.168.1.4"),50500);
+    while(1){
+      ST-LIB::update();
+      if(value){
+        spread.notify();
+      }
+    }
+  \end{lstlisting}
+  \caption{Ejemplo de como usar Notify}
+  \label{NotifyCode}
+\end{figure}
+\par \vspace{0.3cm}
+En el ejemplo solo hay una conexión disponible, pero funcionará con tantas conexiones como se declare, y tanto con conexiones servidor como con conexiones cliente. Es importante apuntar, que al igual que con los paquetes, solo se puede recibir una notificación que tenga una id de paquete declarada; lo cual está hecho para evitar comunicaciones y comportamientos indeseados. \par 
+Un paquete con id 13 no sería recibido por este código; mientras que uno con id 10 sería recibido correctamente, aplicaría el efecto de una puerta negada a la variable booleana value, y esparciría usando difusión amplia a todas sus conexiones el valor. El paquete con id 20 simplemente esparciría la cadena de caracteres recibida sin hacer nada más. Notify() es el método usado para comunicar la notificación a todas las conexiones TCP abiertas, y sirve para comenzar la difusión del mensaje. \par \vspace{0.3cm}
+Se recomienda no hacer directamente un Notify() dentro del método \textit{callback} de una notificación, pues puede provocar un efecto cascada que abrume el bus Ethernet con infinidad de paquetes si no se gestiona correctamente.  
+
+\subsection{ProtectionManager}
+El ProtectionManager es el módulo supervisor de la librería, que mantiene el control de las máquinas de estados y permite controlarlas con mayor facilidad. 
+\par \vspace{0.3cm}
+
+\newpage
 
 \section{Testeo y profiling de la librería}
 \subsection{Testing automático}
