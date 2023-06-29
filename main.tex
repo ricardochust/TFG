@@ -1632,7 +1632,10 @@ Los módulos de la librería que a más estrés son sometidos son las comunicaci
 \par 
 La primera prueba y la más importante es el correcto funcionamiento de la máquina de estados global. La máquina de estados global representa el estado del vehiculo completo, y solo puede encontrarse en iniciando, durmiendo, operativo y fallo. Para encontrarse en durmiendo, operativo o fallo, todos los estados de cada placa deben ser durmiendo, operativo o fallo; respectivamente. Solo puede estar iniciando por un máximo de diez segundos desde que se encendio el sistema, y este estado implica que al menos una placa esta iniciando y ninguna esta en fallo. 
 \par \vspace{0.3cm}
-Con esta única prueba 
+Solamente el sistema de la máquina de estados general requiere el uso de la mayoría de los módulos de la librería para mantener la consistencia de un estado general. ErrorHandler, StateMachine, TCP, SNTP, notification, ProtectionManager y Time son especialmente sensibles. Para que la máquina de estados general funcione correctamente, todos estos módulos deben funcionar también. \par
+Los procedimientos seguidos para la prueba de la máquina de estados general son sencillos. Con el servidor ya en marcha, todas las placas deben encenderse en una estampa de tiempo similar (para ello usan la misma linea de alimentación controlada por varias piezas de hardware o son alimentadas por otras placas), y las placas deben ser capaces de resolver si todas las comunicaciones estan en correcto funcionamiento en 2 segundos. 
+\par
+Tras la correcta inicialización de la máquina de estados general, esta se queda esperando hasta que el servidor de luz verde y entre en modo operativo. Si cualquiera de las placas detecta una situación para la que no esta programada; como conexiones Ethernet no funcionales, simplemente propaga el estado \textit{FAULT} a todas las placas a las que haya conseguido conectarse y todas consiguen llevar el estado general a fallo. 
 
 \subsection{Testing automático}
 Durante la fase de desarrollo y parte de la fase de testeo se preparo una herramienta especial para poder hacer pruebas continuas a la librería conocida como la ATP (\textit{Automatic Testing Platform}). La ATP se divide en una pieza de hardware especializada que emula múltiples señales utilizadas en casos de uso reales denominada SHUTP y una OrangePi 5 con ubuntu como \textit{RTOS} que hace de servidor para recibir los test a probar y enterarse de las pull-request abiertas en GitHub de las cuales obtener el código, a la cual simplemente denominaremos OrangePi. \par \vspace{0.3cm}
@@ -1659,6 +1662,9 @@ Los tests automáticos tienen como objetivo entonces evitar que se repitan error
 Al final los tests automáticos permitieron no solo encontrar errores de la ST-LIB, si no tambien errores de la HAL e incluso de diseño de otros sistemas los microcontroladores; como el Bootloader, que tenía un error en reinicio de la placa que ponía los pines de Bootloader a tierra en lugar de desconectados, lo cual se traduce en un cortocircuito.
 \par 
 Se consiguio parchear estos errores desde el nivel de la librería o usando archivos modificados a los que la ST-LIB referencia, aumentando la consistencia incluso por encima de la de un código bien estructurado de menor nivel. Por ello, aunque preparar estos tests tuviera un gran coste temporal al comienzo del proceso, a lo largo del año consiguio pagar su coste temporal ofreciendo información de depurado de muy alta importancia. 
+
+\section{Conclusión}
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{biblio}
