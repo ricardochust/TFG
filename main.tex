@@ -10,6 +10,9 @@
 \renewcommand{\baselinestretch}{1.0} % 1 línea de interlineado
 
 % Paquetes imprescindibles para la portada
+\usepackage{url}
+\usepackage{xurl}
+\usepackage[breaklinks]{hyperref}
 \usepackage{fontspec} % Para poder importar las fuentes
 \usepackage{textpos} % Para posicionar bloques de texto
 \usepackage{graphicx} % Para cargar imágenes
@@ -1605,8 +1608,9 @@ Sin embargo, observando la diferencia de legibilidad , reusabilidad, y versatili
 Por supuesto, la creación de una librería de abstracción especializada para las necesidades del proyecto específico siempre será una opción, pero aunque a nivel de utilidad y funcionamiento sea superior a la ST-LIB (siempre que se personalice correctamente); muchas veces el coste de tiempo, recursos e inversión monetaria necesarios para la producción de tal librería no merece la ganancia o incluso puede ser prohibitibo para muchos proyectos, y no sirve como una solución a corto o medio plazo. 
 
 \subsection{En la práctica}
-Una de las mejores formas de probar un producto es en un caso de uso real, y cuanto más real sea este caso, mejor sera la información obtenida en esta prueba. Como el objetivo principal de la ST-LIB es apoyar la producción de proyectos como el vehículo Hyperloop, Kenos es la mejor plataforma de pruebas posible para la librería. Si el código funciona, el vehículo funciona. 
+Una de las mejores formas de probar un producto es en un caso de uso real, y cuanto más general y completo sea este caso, mejor sera la información obtenida en esta prueba. Como el objetivo principal de la ST-LIB es apoyar la producción de proyectos como el vehículo Hyperloop, Kenos es la mejor plataforma de pruebas posible para la librería. 
 \par \vspace{0.3cm}
+
 
 
 \subsection{Testing automático}
