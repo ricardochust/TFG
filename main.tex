@@ -1610,8 +1610,29 @@ Por supuesto, la creación de una librería de abstracción especializada para l
 \subsection{En la práctica}
 Una de las mejores formas de probar un producto es en un caso de uso real, y cuanto más general y completo sea este caso, mejor sera la información obtenida en esta prueba. Como el objetivo principal de la ST-LIB es apoyar la producción de proyectos como el vehículo Hyperloop, Kenos es la mejor plataforma de pruebas posible para la librería. 
 \par \vspace{0.3cm}
-
-
+Kenos dispone de ocho microcontroladores distintos con una plétora de funcionalidades. Desde uso de predictores para controlar levitación electromagnética a traves de un motor LIM, hasta comunicaciones con un servidor externo para obtener información sobre el funcionamiento de todo el sistema en vivo. El código de tpdas las placas se puede encontrar publicamente en los repositorios de la organización HyperloopUPV dentro de Github. \cite{web:github:HyperloopUPV}
+\par
+Dentro del vehiculo van montadas las placas de control de baterias (BMSL, BMSH y OBCCU), bootloader (BLCU), control del vehiculo (VCU), control de propulsión (PCU) y control de levitación (LCU). Fuera, en la infraestructura que soporta los railes se encuentra la TCU, encargada de gestionarlo.
+\par \vspace{0.3cm}
+En los códigos de estas placas se puede comprobar, primero de todo, la versatilidad y facilidad de uso de la librería. Partiendo desde un template de trabajo, como puede serlo el project-template; Con alrededor de 1000 lineas se puede implementar un sistema seguro de control de trabajadores que hace uso de varios \textit{PID} para gestionar todos los sistemas a los que esta conectado, a la vez que controla interrupciones externas y comunicaciones con servidores de software, permitiendo control manual, externo e interno. \par
+En comparación, usando el código generado de la HAL como base, estas mismas funcionalidades requerirían alrededor de 10 000 lineas; y aunque la comparación de cantidad de lineas no es necesariamente rigurosa, no es la única muestra de facilidad de uso de la ST-LIB. Abstracción de punteros de memoria, capacidad de uso de las librerías de C++ std como parametros, estructuras simplificadas y con una nomenclatura que no requiere de conocimiento experto para poder utilizarla.
+\par \vspace{0.3cm}
+Además de ser una muestra de como usar en mayor escala la ST-LIB, también es un test de funcionalidad de la librería de alta magnitud. 
+\begin{figure}[h]
+  \includegraphics[scale=0.5]{Imagenes/Sense_and_Control_architecture.png}
+  \caption{Imagen extraida de el FDD de HyperloopUPV H8 que demuestra como funciona la infraestructura de comunicaciones en el sistema}
+\label{H8Structure}
+\end{figure}
+\par \vspace{0.3cm}
+Todas las placas de la estructura (que poseen microcontrolador) usan la librería ST-LIB en su última versión, y deben coordinarse correctamente entre ellas, con el servidor, y con las placas sin controlador para representar el sistema informático de un vehículo. Son la mayor prueba del funcionamiento de la librería, y se coordinan usando varios protocolos de comunicación; especialmente Ethernet. 
+\par \vspace{0.3cm}
+Explicar el funcionamiento completo de este sistema ocuparía demasiado espacio y no entra dentro del alcance de este documento; pero en resumen cada placa funciona de forma autónoma y tiene la capacidad de recibir ordenes desde otra placa (principalmente la VCU) para cambiar su comportamiento dentro de un rango marcado por los requisitos de uso. La VCU puede pedir a la LCU que comience a levitar o deje de hacerlo; pero dependiendo de su estado será la LCU la que decida si se puede levitar y responda a la VCU si su orden es viable. La mayoría de placas tienen implementado al menos un predictor propio para controlar la toma de decisiones, y son estos predictores combinados con las protecciones de la librería las que permiten producir un producto seguro, fiable y funcional en una estampa de tiempo tan pequeña y con recursos tan limitados. 
+\par \vspace{0.3cm}
+Los módulos de la librería que a más estrés son sometidos son las comunicaciones, las protecciones, las PWM, y el control de interrupciones; que son a la vez los sistemas más complicados de poner a funcionar y más propensos a fallos dentro del mercado de microcontroladores para sistemas eléctricos.
+\par 
+La primera prueba y la más importante es el correcto funcionamiento de la máquina de estados global. La máquina de estados global representa el estado del vehiculo completo, y solo puede encontrarse en iniciando, durmiendo, operativo y fallo. Para encontrarse en durmiendo, operativo o fallo, todos los estados de cada placa deben ser durmiendo, operativo o fallo; respectivamente. Solo puede estar iniciando por un máximo de diez segundos desde que se encendio el sistema, y este estado implica que al menos una placa esta iniciando y ninguna esta en fallo. 
+\par \vspace{0.3cm}
+Con esta única prueba 
 
 \subsection{Testing automático}
 Durante la fase de desarrollo y parte de la fase de testeo se preparo una herramienta especial para poder hacer pruebas continuas a la librería conocida como la ATP (\textit{Automatic Testing Platform}). La ATP se divide en una pieza de hardware especializada que emula múltiples señales utilizadas en casos de uso reales denominada SHUTP y una OrangePi 5 con ubuntu como \textit{RTOS} que hace de servidor para recibir los test a probar y enterarse de las pull-request abiertas en GitHub de las cuales obtener el código, a la cual simplemente denominaremos OrangePi. \par \vspace{0.3cm}

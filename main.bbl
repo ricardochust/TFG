@@ -80,4 +80,10 @@
   \url{https://www.st.com/resource/en/application_note/an5325-how-to-use-the-cordic-to-perform-mathematical-functions-on-stm32-mcus-stmicroelectronics.pdf}
 \BIBentrySTDinterwordspacing
 
+\bibitem{web:github:HyperloopUPV}
+\BIBentryALTinterwordspacing
+``Organización hyperloop upv.'' [Online]. Available:
+  \url{https://github.com/HyperloopUPV-H8}
+\BIBentrySTDinterwordspacing
+
 \end{thebibliography}
