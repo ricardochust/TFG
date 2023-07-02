@@ -827,9 +827,9 @@ Estas protecciones están activas para evitar falsas señales y asegurar de que 
 \subsubsection{UART}
 UART es el protocolo de comunicación más sencillo que implementa la librería. Su funcionamiento es bastante básico, tiene un canal para el reloj que marca el paso para enviar y leer cada bit, y otro canal para enviar byte a byte la información. 
 \par
-El canal se encuentra en estado lógico 1 cuando esta parado, y la comunicación se hace por paquetes de tamaño dependiente del estándar usado. En el caso del estándar 8N1 (\textit{el más usado y la configuración inicial en la ST-LIB}) se inicia la comunicación con un bit en estado 0, se envia el byte de información (el tamaño del paquete en este estándar, 8 bits), y se cierra con un bit lógico 1. 
+El canal se encuentra en estado lógico 1 cuando está parado, y la comunicación se hace por paquetes de tamaño dependiente del estándar usado. En el caso del estándar 8N1 (\textit{el más usado y la configuración inicial en la ST-LIB}) se inicia la comunicación con un bit en estado 0, se envía el byte de información (el tamaño del paquete en este estándar, 8 bits), y se cierra con un bit lógico 1.
 \par \vspace{0.3cm}
-En la librería UART tiene las opciones de comunicación de polling y por DMA con interrupciones, como la mayoría de módulos de la ST-LIB Core tienen. Las opciones son tan sencillas como leer y escribir, pues UART es un protocolo de comunicación punto a punto. El código por polling: 
+En la librería UART tiene las opciones de comunicación de \textit{polling} y por DMA con interrupciones, como la mayoría de módulos de la ST-LIB Core tienen. Las opciones son tan sencillas como leer y escribir, pues UART es un protocolo de comunicación punto a punto. El código por \textit{polling}: 
 \begin{figure}[h]
 \begin{lstlisting}
   uint8_t uart = UART::inscribe(UART::uart2);
@@ -846,11 +846,11 @@ En la librería UART tiene las opciones de comunicación de polling y por DMA co
   \label{UARTwPollingcode}
 \end{figure}
 \par \vspace{0.3cm}
-Este fragmento de código enviará continuamente los bytes 5, 5, 2, 2 y esperara a la respuesta desde el otro lado, la cual guardara en la array data receive y volvera a comenzar. Sobre el método inscribe, este recibe un periférico UART declarado en el módulo \footnote{El módulo UART solo tiene declarados diez périfericos uart (de uart1 a uart10). Si se quieren añadir más, se deberá modificar el header del módulo para declararlos} y definido en el archivo runes (en el ejemplo uart2). Como es común en la ST-LIB Core; el inscribe te devuelve un número id que representa en que punto de su lista fue guardada la configuración de tu periférico. 
+Este fragmento de código enviará continuamente los bytes 5, 5, 2, 2 y esperará a la respuesta desde el otro lado, la cual guardará en la matriz \textbf{data\_receive} y volverá a comenzar. Sobre el método \textbf{inscribe}, este recibe un periférico UART declarado en el módulo \footnote{El módulo UART solo tiene declarados diez periféricos uart (de uart1 a uart10). Si se quieren añadir más, se deberá modificar el header del módulo para declararlos} y definido en el archivo \textit{runes} (en el ejemplo uart2). Como es común en la ST-LIB Core; él \textbf{inscribe} devuelve un número id que representa en que punto de su lista fue guardada la configuración del periférico. 
 \par
-Importante añadir que el inscribe solo funcionará sí se hace antes del ST-LIB start. Esto es debido a que el start activa todos los periféricos inicializados por el usuario; pero una vez el ST-LIB start se ha ejecutado ya no activará más periféricos. Se puede circundar este problema con el método start de cada módulo, pero la mejor práctica es tener los periféricos fijos antes de activar el código de la placa. 
+Importante añadir que él \textbf{inscribe} solo funcionará sí se hace antes del \textbf{ST-LIB::start}. Esto es debido a que el \textbf{start} activa todos los periféricos inicializados por el usuario; pero una vez el \textbf{ST-LIB::start} se ha ejecutado ya no activará más periféricos. Se puede circundar este problema con el método \textbf{start} de cada módulo, pero la mejor práctica es tener los periféricos fijos antes de activar el código de la placa. 
 \par \vspace{0.3cm}
-La versión usando DMA tiene un par de añadidos nuevos, pero también añade complejidad al código. Hay dos métodos adicionales, \textit{is busy} y \textit{has next packet}, que permiten saber si la comunicación por DMA ha terminado. El mismo código por DMA sería: 
+La versión usando DMA tiene un par de añadidos nuevos, pero también añade complejidad al código. Hay dos métodos adicionales, \textit{is\_busy} y \textit{has\_next\_packet}, que permiten saber si la comunicación por DMA ha terminado. El mismo código por DMA sería: 
 \begin{figure}[h]
 \begin{lstlisting}
   uint8_t uart = UART::inscribe(UART::uart2);
@@ -871,8 +871,8 @@ La versión usando DMA tiene un par de añadidos nuevos, pero también añade co
 \end{figure}
 \par \vspace{0.3cm}
 
-En este caso el código hara una petición a la DMA para que trasmita los datos del data send siempre que está este libre, mientras que al mismo tiempo revisará si ha recibido un paquete del otro lado y de ser el caso lo guardara en data receive. \par En este caso no tiene mucho sentido usar la DMA porque no hay más código que ejecutar que comunicarse por UART, pero la ventaja viene en que mientras esta gestionando el canal de comunicaciones por DMA el micro puede seguir corriendo código. \par \vspace{0.3cm}
-Un ejemplo muy básico de cuando podría servir la DMA con UART es si se tiene más de un canal UART. El código sería asi: 
+En este caso el código hará una petición a la DMA para que trasmita los datos del \textbf{data\_send} siempre que está este libre, mientras que al mismo tiempo revisará si ha recibido un paquete del otro lado y de ser el caso lo guardará en \textbf{data\_receive}. \par En este caso no tiene mucho sentido usar la DMA porque no hay más código que ejecutar que comunicarse por UART, pero la ventaja viene en que mientras está gestionando el canal de comunicaciones por DMA el microcontrolador puede seguir corriendo código. \par \vspace{0.3cm}
+Un ejemplo muy básico de cuando podría servir la DMA con UART es si se tiene más de un canal UART. El código sería así: 
 \begin{figure}[h]
 \begin{lstlisting}
   uint8_t first_uart = UART::inscribe(UART::uart1);
@@ -900,14 +900,14 @@ Un ejemplo muy básico de cuando podría servir la DMA con UART es si se tiene m
   \label{twoUARTcode}
 \end{figure}
 \par \vspace{0.3cm}
-En el caso de polling el programa tendría que esperar a que terminara la comunicación por el primer bus antes de comenzar a comunicarse por el segundo; y aun más grave, tendría que esperar a la respuesta de ambos buses antes de comenzar la siguiente comunicación o ejecutar cualquier otro código. Con DMA, sin embargo, no hay ninguna espera y se pueden mantener comunicaciones paralelas por varios buses. 
+En el caso de \textit{polling} el programa tendría que esperar a que terminara la comunicación por el primer bus antes de comenzar a comunicarse por el segundo; y aún más grave, tendría que esperar a la respuesta de ambos buses antes de comenzar la siguiente comunicación o ejecutar cualquier otro código. Con DMA, sin embargo, no hay ninguna espera y se pueden mantener comunicaciones paralelas por varios buses. 
 
 \subsubsection{I2C y SPI}
-Tanto I2C como SPI son dos protocolos de comunicación basados en el paradigma de controlador - trabajador. En estos protocolos el controlador marca la velocidad de reloj (que en ambos casos es un canal físico que marca cada cuanto se envía un bit de información), y actua de forma proactiva haciendo peticiones que esperan una respuesta. \par
-Por contraparte los trabajadores se adaptan a la velocidad de reloj indicada (mientras no supere su capacidad máxima) y son unos agentes reactivos; esperan una petición para comenzar el proceso o devolver información del resultado \par \vspace{0.3cm}
+Tanto I2C como SPI son dos protocolos de comunicación basados en el paradigma de controlador - trabajador. En estos protocolos el controlador marca la velocidad de reloj (que en ambos casos es un canal físico que marca cada cuanto se envía un bit de información), y actúa de forma proactiva haciendo peticiones que esperan una respuesta. \par
+Por contraparte, los trabajadores se adaptan a la velocidad de reloj indicada (mientras no supere su capacidad máxima) y son unos agentes reactivos; esperan una petición para comenzar el proceso o devolver información del resultado \par \vspace{0.3cm}
 En ambos protocolos es posible tener más de dos dispositivos conectados en una única red de comunicación; y en I2C además es posible tener más de un controlador que arbitre el reloj y haga peticiones. Por ello, para identificarse entre los distintos dispositivos estos protocolos añaden utilidades adicionales que UART no tiene. \par
-En el caso de SPI, usa un cable específico para cada trabajador que lo activa o desactiva. El I2C por su parte usa un sistema de ip de 7 bits básico, y cada vez que se transmite una orden esta incluye la ip emisora y la receptora. \par \vspace{0.3cm}
-Quitando estas diferencias a nivel de la ST-LIB SPI y I2C funcionan igual que UART, y de hecho en el momento de la creación de estos módulos se uso UART como base para hacerlas. \par
+En el caso de SPI, usa un cable específico para cada trabajador que lo activa o desactiva. El I2C por su parte utiliza un sistema de ip de 7 bits básico, y cada vez que se transmite una orden, esta incluye la ip emisora y la receptora. \par \vspace{0.3cm}
+Quitando estas diferencias a nivel de la ST-LIB SPI y I2C funcionan igual que UART, y de hecho en el momento de la creación de estos módulos se usó UART como base para hacerlas. \par
 \begin{figure}[h]
 \begin{lstlisting}
   uint8_t first_spi_worker = SPI::inscribe(SPI::spi1);
@@ -930,11 +930,11 @@ Quitando estas diferencias a nivel de la ST-LIB SPI y I2C funcionan igual que UA
   \label{SPIcode}
 \end{figure}
 \par \vspace{0.3cm}
-Como se puede en el código de la figura \ref{SPIcode} funciona por polling. La razón de ello es que los trabajadores que se comunican por SPI (o I2C) no avisan de cuando han terminado (pues podrían interrumpir otra comunicación). En su lugar su controlador debe preguntarles y estos le devolverán un valor u otro dependiendo de si acabaron su proceso o aun están ocupados. \par
-Como las DMA no tienen la suficiente capacidad lógica para resolver si la información que han recibido implica que el periférico ha terminado o aún esta en proceso, no tiene mucho sentido utilizar las DMA en estos protocolos. \par 
-Adicionalmente, su comportamiento ya ofrece en cierta forma paralelización, pues el controlador sabe cuando va a devolverle la información que desea (sea esta información la respuesta o que aun esta procesando); ya que los trabajadores solo responden cuando se les pide, y conservan la respuesta hasta entonces. Debido a esto, el controlador puede seguir ejecutando código sin temer a perder la respuesta de su petición y recibirla cuando las tareas críticas hayan sido atendidas. 
+Como se puede en el código de la figura \ref{SPIcode} funciona por \textit{polling}. La razón de ello es que los trabajadores que se comunican por SPI (o I2C) no avisan de cuando han terminado (pues podrían interrumpir otra comunicación). En su lugar, su controlador debe preguntarles y estos le devolverán un valor u otro dependiendo de si acabaron su proceso o aún están ocupados. \par
+Como las DMA no tienen la suficiente capacidad lógica para resolver si la información que han recibido implica que el periférico ha terminado o aún está en proceso, no tiene mucho sentido utilizar las DMA en estos protocolos. \par 
+Adicionalmente, su comportamiento ya ofrece en cierta forma paralelización, pues el controlador sabe cuando va a devolverle la información que desea (sea esta información la respuesta o que aún está procesando); ya que los trabajadores solo responden cuando se les pide, y conservan la respuesta hasta entonces. Debido a esto, el controlador puede seguir ejecutando código sin temer a perder la respuesta de su petición y recibirla cuando las tareas críticas hayan sido atendidas. 
 \par \vspace{0.3cm}
-Como I2C puede usar los mismos pines para comunicarse con toda la red de trabajadores, no hay necesidad de declarar un I2C por cada uno de ellos. Ademas, al requerir una comunicación por paquetes algo más compleja se ha hecho un módulo de apoyo. Quitando estos dos matices, funciona de la misma forma que el protocolo SPI. Aquí un pequeño fragmento de código del I2C:
+Como I2C puede usar los mismos pines para comunicarse con toda la red de trabajadores, no hay necesidad de declarar un I2C por cada uno de ellos. Además, al requerir una comunicación por paquetes algo más compleja se ha hecho un módulo de apoyo. Quitando estos dos matices, funciona de la misma forma que el protocolo SPI. Aquí un pequeño fragmento de código del I2C:
 \begin{figure}[h]
 \begin{lstlisting}
   uint8_t i2c_workers = I2C::inscribe(I2C::i2c2, 0x10);
@@ -964,11 +964,11 @@ Las id tanto del controlador como de los trabajadores pueden ponerse tanto en fo
 \subsubsection{CAN-FD}
 CAN-FD\cite{web:CANFD:CiA} es un protocolo algo más avanzado que goza de múltiples sistemas de recuperación de información y usa dos canales negados para detectar interferencias. Esto lo hace más robusto y le permite alcanzar mayores velocidades; pero también incrementa sus requisitos mínimos para poder funcionar, en el sentido del hardware. 
 \par 
-Además, CAN-FD; a diferencia de los protocolos previamente mencionados, si está protegido por derechos de autor y es propiedad de la empresa privada Bosch. Esto tiene sus ventajas y desventajas, como un mejor soporte pero una mayor dependencia. 
+Además, CAN-FD; a diferencia de los protocolos previamente mencionados, sí está protegido por derechos de autor y es propiedad de la empresa privada Bosch. Esto tiene sus ventajas y desventajas, como un mejor soporte pero una mayor dependencia. 
 \par \vspace{0.3cm}
-Si se desea comunicar CAN-FD a un sistema que este usando un RTOS (sea se un ordenador o un microprocesador), lo más probable es que se requiera de una interfaz PCAN-USB. 
+Si se desea comunicar CAN-FD a un sistema que esté usando un RTOS (sea sé un ordenador o un microprocesador), lo más probable es que se requiera de una interfaz PCAN-USB. 
 \par \vspace{0.3cm}
-En cuanto a la interfaz de software del módulo CAN-FD, está estructura para funcionar de la misma manera que los otros protocolos de comunicación. Como siempre, en la figura (\ref{FDCANcode}) se mostrará un ejemplo de código. 
+En cuanto a la interfaz de software del módulo CAN-FD, está estructurada para funcionar de la misma manera que los otros protocolos de comunicación. Como siempre, en la figura (\ref{FDCANcode}) se mostrará un ejemplo de código. 
 
 \begin{figure}[h]
   \begin{lstlisting}
@@ -988,14 +988,14 @@ En cuanto a la interfaz de software del módulo CAN-FD, está estructura para fu
   \label{FDCANcode}
   \end{figure}
 
-Este código se ha desenrrollado un poco por claridad, pero la idea es que se pueda hacer \textit{hard-code} con la mayoría de valores dentro de los paquetes y que estos sean la referencia a la que acudir. Como se ve, en el envío se usa un \textit{array} y la recepción un paquete. Lo cierto es que en este módulo son intercambiables, y además se puede usar cualquier otra estructura de información que se agrupe dentro del módulo \textit{span} de C++. El último valor del transmit y del packet es el tamaño de paquete. 
+Este código se ha desenrollado un poco por claridad, pero la idea es que se pueda hacer \textit{hard-code} con la mayoría de valores dentro de los paquetes y que estos sean la referencia a la que acudir. Como se ve, en el envío se usa un \textit{array} y la recepción un paquete. Lo cierto es que en este módulo son intercambiables, y además se puede utilizar cualquier otra estructura de información que se agrupe dentro del módulo \textit{span} de C++. El último valor del \textbf{transmit} y del \textbf{packet} es el tamaño de paquete. 
 
 \subsubsection{UDP}
 UDP es el protocolo más sencillo de Ethernet. Se basa en mandar paquetes de información sin ningún tipo de comprobación o protección a una o más ip. No hay garantía de que el paquete llegue, ni es ese el propósito de este protocolo. 
 \par \vspace{0.3cm}
-La idea de este protocolo es poder enviar información recurrente o un gran flujo de datos continuo consumiendo la menor cantidad de proceso posible. Si el bus Ethernet esta montado correctamente y no se dan condiciones extremas la probabilidad de perdida de paquete es ínfima, así que para procesos que requieran una actualización continua con un margen de error aceptable este protocolo es ideal. 
+La idea de este protocolo es poder enviar información recurrente o un gran flujo de datos continuo, consumiendo la menor cantidad de proceso posible. Si el bus Ethernet está montado correctamente y no se dan condiciones extremas, la probabilidad de perdida de paquete es ínfima; así que para procesos que requieran una actualización continua con un margen de error aceptable este protocolo es ideal. 
 \par \vspace{0.3cm}
-Por otra parte para sistemas críticos que requieren enviar una señal específica con la máxima prioridad, probablemente se desee establecer una conexión TCP en su lugar. 
+Por otra parte, para sistemas críticos que requieren enviar una señal específica con la máxima prioridad, probablemente se desee establecer una conexión TCP en su lugar. 
 \par \vspace{0.3cm}
 Algunos ejemplos de uso para UDP serían:
 \begin{figure}[H]
@@ -1008,11 +1008,11 @@ Algunos ejemplos de uso para UDP serían:
 \par \vspace{0.3cm}
 Mientras que UDP en sí no tiene ninguna protección, el módulo Ethernet de la librería sí tiene unas mínimas protecciones en marcha; pensadas para que no reduzcan la efectividad de UDP.
 \par
-La librería comprueba primero; antes de activar los sensores, periféricos y actuadores de la placa; si el bus de Ethernet es viable. Esta comprobación se hace a traves del protocolo ARP, que permite resolver a traves de las direcciones MAC la ip de cada dispositivo conectado a la red. 
+La librería comprueba primero; antes de activar los sensores, periféricos y actuadores de la placa; si el bus de Ethernet es viable. Esta comprobación se hace a través del protocolo ARP, que permite resolver usando las direcciones MAC la ip de cada dispositivo conectado a la red. 
 \par \vspace{0.3cm}
-El protocolo ARP solo puede fallar si hay más de un dispositivo con la misma MAC en la red o si hay solo 1 dispositivo conectado a la red, osea se, solo un lado del cable Ethernet esta conectado. El módulo Ethernet de la librería solo falla al activar la placa (se queda esperando infinitamente) si el protocolo ARP no se resuelve o si la ip escrita en el módulo ya esta ocupada. \par \vspace{0.3cm}
+El protocolo ARP solo puede fallar si hay más de un dispositivo con la misma MAC en la red o si hay solo 1 dispositivo conectado a la red, o lo que es lo mismo, solo un lado del cable Ethernet está conectado a un dispositivo activo. El módulo Ethernet de la librería solo falla al activar la placa (se queda esperando infinitamente) si el protocolo ARP no se resuelve o si la ip escrita en el módulo ya está ocupada. \par \vspace{0.3cm}
 Debido a que lo más probable es que el usuario desee conectar más de una placa a la misma red, es de interés cambiar tanto la MAC como la IP de la placa antes de conectarla la comunicación Ethernet fallara. \par
-Esto es tan sencillo como ir dentro del proyecto a LWIP/app/lwip.c y cambiar dentro del método MX\_LWIP\_Init la \textit{array} IP\_ADDRESS para la ip; y LWIP/Target/ethernetif.c dentro del método low\_level\_init la \textit{array} MACAddr a la dirección MAC deseada. 
+Esto es tan sencillo como ir dentro del proyecto a LWIP/app/lwip.c y cambiar dentro del método \textbf{MX\_LWIP\_Init} la matriz \textbf{IP\_ADDRESS} para la ip; y LWIP/Target/ethernetif.c dentro del método low\_level\_init la matriz \textbf{MACAddr} a la dirección MAC deseada. 
 
 \begin{figure}[h]
   \begin{lstlisting}
@@ -1037,22 +1037,22 @@ Esto es tan sencillo como ir dentro del proyecto a LWIP/app/lwip.c y cambiar den
 \end{figure}
 \par \vspace{0.3cm}
 
-Este código envía un paquete que contiene data\_send a la ip objetivo, y cuando la ip le responda activará una interrupción que ejecutara la lambda dentro del packet read. 
+Este código envía un paquete que contiene \textbf{data\_send} a la ip objetivo, y cuando la ip le responda activará una interrupción que ejecutara la lambda dentro del \textbf{packet\_read}. 
 \par
-Primero de todo, se puede ver que ahora se ha comenzado a usar el ST-LIB::update(). Este método se encarga de actualizar en tiempo real las acciones automáticas de la librería; que incluyen protecciones, detección de errores y obtención de paquetes. En protocolos más sencillos capturar los paquetes era suficientemente sencillo como para que el usuario pudiese gestionarlo sin resultar un problema, pero debido a la velocidad y exigencias del protocolo Ethernet, además de su gran variedad de uso; se ha decidido que la librería lo gestionase por el usuario. 
+Primero de todo, se puede ver que ahora se ha comenzado a usar el \textbf{ST-LIB::update()}. Este método se encarga de actualizar en tiempo real las acciones automáticas de la librería; que incluyen protecciones, detección de errores y obtención de paquetes. En protocolos más sencillos capturar los paquetes era suficientemente sencillo como para que el usuario pudiese gestionarlo sin resultar un problema, pero debido a la velocidad y exigencias del protocolo Ethernet, además de su gran variedad de uso; se ha decidido que la librería lo gestionase por el usuario. 
 \par \vspace{0.3cm}
-Si no se ejecuta a suficiente velocidad el ST-LIB::update(), el buffer de Ethernet puede llenarse y perderse información (dependiendo del tráfico de la red puede rondar en el orden de horas o de segundos), por lo que se recomienda ejecutar el ST-LIB::update() lo más rápido posible (estándo solo en el while es una ejecución en el orden de microsegundos). 
+Si no se ejecuta a suficiente velocidad el \textbf{ST-LIB::update()}, el buffer de Ethernet puede llenarse y perderse información (dependiendo del tráfico de la red puede rondar en el orden de horas o de segundos), por lo que se recomienda ejecutar el \textbf{ST-LIB::update()} lo más rápido posible (estando solo en el bucle \textbf{while} es una ejecución en el orden de microsegundos). 
 \par
  Si se siguen buenas prácticas de programación en microprocesadores (como tener interrupciones de muy poco código que activen marcadores para ejecutar otras cosas en futuro, ejecutar métodos con límites de tiempo y haciendo múltiples pasos en distintas llamadas), no debería haber problemas ni en los entornos con más carga de comunicación. 
  \par \vspace{0.3cm}
- Además, se puede ver que el paquete de envío packet\_send no tiene ninguna función lambda. Esto es meramente para que no provoque interrupción cuando reciba un paquete con esa id, e ignore los mensajes con esta id. Pero perfectamente se podría tener un paquete que tanto se enviara como se pudiese recibir desde otros dispositivos. \par
+ Además, se puede ver que el paquete de envío \textbf{packet\_send} no tiene ninguna función lambda. Esto es meramente para que no provoque interrupción cuando reciba un paquete con esa id, e ignore los mensajes con esta id. Pero perfectamente se podría tener un paquete que tanto se enviara como se pudiese recibir desde otros dispositivos. \par
  Por último, se le puede dar cualquier función de tipo \textit{void}, no es necesario que sea una lambda. De hecho, aunque las funciones lambda sean más cómodas pueden provocar una reducción de velocidad si se usan continuamente, y puede ser de interés evitarla si se encuentran problemas de velocidad de ejecución. 
 
  \subsubsection{TCP}
  El protocolo TCP es el otro módulo mayor que surge de Ethernet. A diferencia de UDP, TCP tiene decenas de protecciones y siempre que se tenga un bus viable en Ethernet y una conexión establecida entre los dos puntos de comunicación, siempre llegará el mensaje al punto deseado. \par \vspace{0.3cm}
- El único problema con TCP es que es más lento que el protocolo UDP, especialmente en el caso de que se desee enviar miles o millones de paquetes por segundo, pues TCP requiere de una confirmación (conocida como ACK) para cada uno de los paquetes, y además todos ellos deben tener cuarenta bits de cabecera obligatoria para que la comunicación funcione, aunque este contenga solo dos bits. \par 
- Por ello, TCP se recomienda para paquetes críticos para el funcionamiento del sistema, de un solo envio, o de información que se debe recopilar con la máxima precisión. \par \vspace{0.3cm}
- Quitando la necesidad de establecer una conexión, el módulo TCP de la ST-LIB funciona exactamente igual que el módulo UPD, asi que se recomienda leerse también el apartado de UDP para comprender correctamente el funcionamiento de TCP, ya que hay cosas que no se explicarán aqui para evitar repetición. \par 
+ El único problema con TCP es que es más lento que el protocolo UDP, especialmente en el caso de que se desee enviar miles o millones de paquetes por segundo, pues TCP requiere de una confirmación (conocida como \textit{ACK}) para cada uno de los paquetes, y además todos ellos deben tener cuarenta bits de cabecera obligatoria para que la comunicación funcione, aunque este contenga solo dos bits. \par 
+ Por ello, TCP se recomienda para paquetes críticos para el funcionamiento del sistema, de un solo envío, o de información que se debe recopilar con la máxima precisión. \par \vspace{0.3cm}
+ Quitando la necesidad de establecer una conexión, el módulo TCP de la ST-LIB funciona exactamente igual que el módulo UPD, así que se recomienda leerse también el apartado de UDP para comprender correctamente el funcionamiento de TCP, ya que hay cosas que no se explicarán en este apartado para evitar repetición. \par 
 
 \begin{figure}[h]
   \begin{lstlisting}
@@ -1079,7 +1079,7 @@ Si no se ejecuta a suficiente velocidad el ST-LIB::update(), el buffer de Ethern
 
 \par \vspace{0.3cm}
 
-El primer ejemplo de código, mostrado en la figura \ref{TCPuserCode}, muestra que la conexión como usuario funciona practicamente igual que UDP. La única diferencia, es que la construccion del Socket puede fallar si no se consigue establecer conexión con el servidor en el tiempo límite, normalmente debido a que el servidor no este activado aún. 
+El primer ejemplo de código, mostrado en la figura \ref{TCPuserCode}, muestra que la conexión como usuario funciona prácticamente igual que UDP. La única diferencia es que la construcción del \textit{socket} puede fallar si no se consigue establecer conexión con el servidor en el tiempo límite, normalmente debido a que el servidor no esté activado aún. 
 
  \begin{figure}[H]
   \begin{lstlisting}
@@ -1107,13 +1107,13 @@ El primer ejemplo de código, mostrado en la figura \ref{TCPuserCode}, muestra q
 
 \par \vspace{0.3cm}
 
-En este segundo ejemplo de código, mostrado en la figura \ref{TCPserverCode}, la placa hace de servidor. Por como esta estructurado, por ahora cada ServerSocket solo puede aceptar una conexión. Si se requieren de múltiples conexiones, la única opción actualmente es usar múltiples ServerSocket. En un futuro se tiene pensado hacer una abstracción en la ST-LIB LOW que maneje estos problemas, pero para la mayoría de necesidades en el mundo de los microprocesadores esto suele ser más que suficiente. 
+En este segundo ejemplo de código, mostrado en la figura \ref{TCPserverCode}, la placa hace de servidor. Por como está estructurado, por ahora cada ServerSocket solo puede aceptar una conexión. Si se requieren de múltiples conexiones, la única opción actualmente es usar múltiples ServerSocket. En un futuro se tiene pensado hacer una abstracción en la ST-LIB Low que maneje estos problemas, pero para la mayoría de necesidades en el mundo de los microprocesadores esto suele ser más que suficiente. 
 
 \subsubsection{SNTP}
-El protocolo SNTP es el protocolo de sincronización de relojes usado en la ST-LIB. Se basa en comunicación UDP y funciona de forma completamente automática en la ST-LIB. Funciona a traves de conectarse a un servidor indicado en SNTP.cpp (que se puede cambiar por cualquier otro servidor accesible desde la red cambiando el valor de la variable TARGET\_IP). \par 
-Si no se desea cambiar la ST-LIB, también se puede activar de forma manual con otra ip usando el método sntp\_update justo despues del ST-LIB::start, que actualizará la lista de servidores de las que puede reclamar la hora añadiendo la ip introducida y removiendo la de la ST-LIB. 
+El protocolo SNTP es el protocolo de sincronización de relojes usado en la ST-LIB. Se basa en comunicación UDP y funciona de forma completamente automática en la ST-LIB. Funciona a través de conectarse a un servidor indicado en SNTP.cpp (que se puede cambiar por cualquier otro servidor accesible desde la red cambiando el valor de la variable \textbf{TARGET\_IP}). \par 
+Si no se desea cambiar la ST-LIB, también se puede activar de forma manual con otra ip usando el método \textbf{sntp\_update} justo después del \textbf{ST-LIB::start()}, que actualizará la lista de servidores de las que puede reclamar la hora añadiendo la ip introducida y removiendo la de la ST-LIB. 
 \par \vspace{0.3cm}
-Siempre que el servidor NTP este funcionando, actualizará la hora una vez al activarse la placa y una vez cada hora despues de que la placa se active. El valor de la hora obtenido se guardara dentro del RTC, un sub-módulo dentro de time hecho especialmente para el funcionamiento del módulo SNTP, que puede guardar no solo un valor de reloj, si no además una hora y fecha. 
+Siempre que el servidor NTP esté funcionando, actualizará la hora una vez al activarse la placa y una vez cada hora después de que la placa se active. El valor de la hora obtenido se guardará dentro del RTC, un submódulo dentro de time hecho especialmente para el funcionamiento del módulo SNTP, que puede guardar no solo un valor de reloj, si no además una hora y fecha. 
 \par \vspace{0.3cm}
 Para obtener todos los valores del RTC, es tan fácil como usar el método adquisidor del RTC, como se muestra en la figura \ref{SNTPCode}
 
@@ -1129,16 +1129,18 @@ Para obtener todos los valores del RTC, es tan fácil como usar el método adqui
   \label{SNTPCode}
 \end{figure}
 \par \vspace{0.3cm}
-Al usarse este código se podrá comprobar que al principio imprimira fechas extrañas. Esto es debido a que hasta que no resuelva por primera vez la comunicación SNTP la fecha no va a estar actualizada, cosa que se debe tener en cuenta al programar el código. 
+Al usarse este código se podrá comprobar que al principio imprimirá fechas extrañas. Esto es debido a que hasta que no resuelva por primera vez la comunicación SNTP la fecha no va a estar actualizada, cosa que se debe tener en cuenta al programar el código. 
+\par 
+Como advertencia adicional, SNTP no funcionará si la distancia temporal de los relojes del servidor y el cliente (el microcontrolador) están a una distancia mayor de 36 años. Actualmente el reloj RTC está configurado para activarse en el 1-1-2023, pero si no se activa adecuadamente o la distancia temporal a 2023 es mayor de 36 años (sea por la razón que sea), el protocolo no funcionará. 
 
 \newpage
 
-\subsection{ST-LIB LOW}
-La ST-LIB LOW es la capa intermedia entre la ST-LIB Core y la ST-LIB HIGH; y es la capa que contiene la mayor cantidad de abstracciones, cambiando la forma de programar los microcontroladores de lenguaje C con manejo de registros e id de periféricos a una estructura más parecida a C++, usando POO y múltiples macros declaradas en ST-LIB start y update. 
+\subsection{ST-LIB Low}
+La ST-LIB Low es la capa intermedia entre la ST-LIB Core y la ST-LIB High; y es la capa que contiene la mayor cantidad de abstracciones, cambiando la forma de programar los microcontroladores de lenguaje C con manejo de registros e id de periféricos a una estructura más parecida a C++, usando POO y múltiples macros declaradas en \textbf{ST-LIB::start} y \textbf{update}. 
 \par \vspace{0.3cm}
-Por lo general, la mayoría de las cosas que un usuario utilice estarán en esta capa, pues la ST-LIB Core sufre de ser de muy bajo nivel; mientras que la ST-LIB HIGH puede llegar a ser demasiado específica. 
+Por lo general, la mayoría de las cosas que un usuario utilice estarán en esta capa, pues la ST-LIB Core sufre de ser de muy bajo nivel; mientras que la ST-LIB High puede llegar a ser demasiado específica. 
 \par \vspace{0.3cm}
-Todo lo que se encuentra en la ST-LIB LOW no es más que una abstracción de la ST-LIB Core para facilitar su uso, así que no es estrictamente necesaria. No obstante, esta diseñada para ser más cómoda y rápida de usar añadiendo el mínimo coste de proceso posible, por lo que se recomienda usarla por encima de la ST-LIB Core siempre que sea posible.
+Todo lo que se encuentra en la ST-LIB LOW no es más que una abstracción de la ST-LIB Core para facilitar su uso, así que no es estrictamente necesaria. No obstante, está diseñada para ser más cómoda y rápida de usar añadiendo el mínimo coste de proceso posible, por lo que se recomienda usarla por encima de la ST-LIB Core siempre que sea posible.
 
 \subsubsection{Counter}
 Counter es un pequeño módulo de utilidad que sirve para contar las ocurrencias de un evento en una estampa de tiempo dada y obtiene su frecuencia, en Hz. 
@@ -1157,16 +1159,16 @@ Para cualquier cálculo que requiera del uso de frecuencia (o de periodo, que es
 \end{figure}
 \par \vspace{0.3cm}
 
-Este código ejemplo obtiene la frecuencia con la que se pasa por el bucle while. Esto puede ser extremadamente útil para poder analizar el código, pues muchas veces los requisitos funcionales de un código de microcontrolador dado se definen en mínimo de veces por segundo. \par
-Una vez se tenga el bucle de código que se quiere comprobar en marcha (sea un bucle while o una alarma que se repite continuamente), una forma muy sencilla de comprobar que se cumplen los requisitos es poner dentro del método en cuestión la función count y obtener la frecuencia con la que se ejecuta. Esto permitirá ver si realmente se cumple el concepto del código o hay algo afectando a la ejecución. \par
-Muchas veces puede haber una colisión o una condición de carrera entre dos métodos que se deban ejecutar a una frecuencia dada, sea porque tardan más de lo debido o por que suceden las interrupciones que lo activan al mismo tiempo. Esta herramienta está para identificar esos casos y separar la teoría de la práctica. 
+Este código ejemplo obtiene la frecuencia con la que se pasa por el bucle \textbf{while}. Esto puede ser extremadamente útil para poder analizar el código, pues muchas veces los requisitos funcionales de un código de microcontrolador dado se definen en mínimo de veces por segundo. \par
+Una vez se tenga el bucle de código que se quiere comprobar en marcha (sea un bucle o una alarma que se repite continuamente), una forma muy sencilla de comprobar que se cumplen los requisitos es poner dentro del método en cuestión la función count y obtener la frecuencia con la que se ejecuta. Esto permitirá ver si realmente se cumple el concepto del código o hay algo afectando a la ejecución. \par
+Muchas veces puede haber una colisión o una condición de carrera entre dos métodos que se deban ejecutar a una frecuencia dada, sea porque tardan más de lo debido o porque suceden las interrupciones que lo activan al mismo tiempo. Esta herramienta está para identificar esos casos y separar la teoría de la práctica. 
 \par \vspace{0.3cm}
-Además de sus utilidades de depurado puede servir para hacer cálculos basados en formulas físicas para hacer un predictor. 
+Además de sus utilidades de depurado puede servir para hacer cálculos basados en fórmulas físicas para hacer un predictor. 
 
 \subsubsection{StopWatch}
 StopWatch es la contraparte de Counter, y hace la función de cronómetro; pero en lugar de ofrecer su información en unidades métricas la ofrece en ciclos de reloj. Para usarlo, simplemente se inicia una instancia de StopWatch donde se quiera comenzar a contar y se usa el método Stop para terminar de contar y recibir el resultado de la diferencia. 
 \par \vspace{0.3cm}
-Al igual que Counter, StopWatch sirve como herramienta de depurado de código. StopWatch ofrece en nano segundos la diferencia de tiempo desde que se inicio hasta que se para, permitiendo analizar cuanto tiempo le cuesta al microprocesador ejecutar uno o más métodos. 
+Al igual que Counter, StopWatch sirve como herramienta de depurado de código. StopWatch ofrece en nanosegundos la diferencia de tiempo desde que se inició hasta que se para, permitiendo analizar cuanto tiempo le cuesta al microprocesador ejecutar uno o más métodos. 
 \begin{figure}[h]
   \begin{lstlisting}
     Counter contador(100);
@@ -1184,12 +1186,12 @@ Al igual que Counter, StopWatch sirve como herramienta de depurado de código. S
 En el código de la figura \ref{StopWatchCode} se muestra como funciona su uso. A diferencia de la mayoría de la ST-LIB LOW no usa clases, y esto es debido a que una vez se termina el uso de StopWatch debe eliminarse de memoria. \par 
 Para evitar que el usuario tenga que gestionar la memoria y pueda sufrir fugas\footnote{la fuga de memoria es cuando el código compilado pide continuamente espacios de memoria sin liberarlos hasta que toda la memoria se llena, el puntero apunta a un valor inexistente, y la ejecución termina con un error.}, se ha decidido que funcionara como una librería estática, pero en lugar de usar id numéricas recibe una string que hace de pseudónimo para el reloj. El valor \textit{``mysw''} es meramente el nombre que se le ha designado a ese StopWatch, y cualquier string es un valor válido.
 \par \vspace{0.3cm}
-StopWatch también sirve para hacer cálculos físicos o predictores que requieran diferencial de tiempo en sus formulas. El error en la diferencia de tiempo que devuelve StopWatch es menor que \pm2 / \textit{(velocidad de reloj del microprocesador)} segundos si no se tiene en cuenta la deriva de susodicho reloj.  
+StopWatch también sirve para hacer cálculos físicos o predictores que requieran diferencial de tiempo en sus fórmulas. El error en la diferencia de tiempo que devuelve StopWatch es menor que \pm2 / \textit{(velocidad de reloj del microprocesador)} segundos si no se tiene en cuenta la deriva de susodicho reloj.  
 
 \subsubsection{DigitalOutput}
 DigitalOutput es el módulo de la ST-LIB LOW que abstrae el módulo Core con el mismo nombre. Su objetivo es hacer más fácil el uso de los GPIO para los usuarios, encargandose de activar los periféricos cuando se active la placa, gestionar las id de forma interna, y de añadir nuevas funcionalidades. 
 \par \vspace{0.3cm}
-Los métodos de DigitalOutput son el constructor, turn\_on, turn\_off, set\_pin\_state, y toggle. Como su nombres indican, permiten crear el objeto, encender, apagar, cambiar el estado, y invertir el estado actual; respectivamente. Aqui un ejemplo de código: 
+Los métodos de DigitalOutput son el constructor, \textbf{turn\_on}, \textbf{turn\_off}, \textbf{set\_pin\_state}, y \textbf{toggle}. Como sus nombres indican, permiten crear el objeto, encender, apagar, cambiar el estado, e invertir el estado actual; respectivamente. Aquí un ejemplo de código: 
 \begin{figure}[H]
   \begin{lstlisting}
     DigitalOutput out(PA5);
@@ -1202,8 +1204,8 @@ Los métodos de DigitalOutput son el constructor, turn\_on, turn\_off, set\_pin\
   \label{DigitalOutputCode}
 \end{figure}
 \par \vspace{0.3cm}
-Este código cambiara el estado del pin out lo más rápido que pueda. No se recomienda usar este código con ningún led, o en general con ningún componente eléctrico sensible, pues cambiar tan rápido de estado podría desgastarlo rapidamente. Un código más razonable sería que hubiese una espera al final del bucle; aunque podría provocar problemas al estar perdiendo valioso tiempo de proceso en una espera vacía. \par
-El mejor código para un caso así sería introducir el toggle dentro de una interrupción que ocurriese periodicamente, usando; por ejemplo, el módulo time: 
+Este código cambiará el estado del pin out lo más rápido que pueda. No se recomienda usar este código con ningún led, o en general con ningún componente eléctrico sensible, pues cambiar tan rápido de estado podría desgastarlo rápidamente. Un código más razonable sería que hubiese una espera al final del bucle; aunque podría provocar problemas al estar perdiendo valioso tiempo de proceso en una espera vacía. \par
+El mejor código para un caso así sería introducir el \textbf{toggle} dentro de una interrupción que ocurriese periódicamente, usando; por ejemplo, el módulo time: 
 \begin{figure}[H]
   \begin{lstlisting}
     DigitalOutput out(PA5);
@@ -1218,7 +1220,7 @@ El mejor código para un caso así sería introducir el toggle dentro de una int
 \end{figure}
 
 \subsubsection{ErrorHandler}
-El ErrorHandler es el módulo de retroalimentación de usuario por excelencia de la librería. Funciona usando la función printf (que la librería por defecto sobrescribe para que use el módulo UART) para enviar no solo el error que se le introduzca, si no además información adicional de depurado como el lugar en el que sucedio dentro del código. 
+El ErrorHandler es el módulo de retroalimentación de usuario por excelencia de la librería. Funciona usando la función printf (que la librería por defecto sobrescribe para que use el módulo UART) para enviar no solo el error que se le introduzca, sino además información adicional de depurado como el lugar en el que sucedió dentro del código. 
 \begin{figure}[h]
   \begin{lstlisting}
     ST-LIB::start();
@@ -1230,19 +1232,16 @@ El ErrorHandler es el módulo de retroalimentación de usuario por excelencia de
   \caption{Ejemplo de ErrorHandler}
   \label{ErrorHandlerCode}
 \end{figure}
-En el código ejemplo de la figura \ref{ErrorHandlerCode} primero se dará un error en la linea debajo del start; y luego se darán continuamente errores en la linea debajo del bucle. Importante notar, que aunque el usuario haya introducido la misma cadena de caracteres en ambos errores, serán distinguibles gracias a la información adicional que provee el ErrorHandler. 
+En el código ejemplo de la figura \ref{ErrorHandlerCode} primero se dará un error en la línea debajo del \textbf{start}; y luego se darán continuamente errores en la línea debajo del bucle. Importante notar, que aunque el usuario haya introducido la misma cadena de caracteres en ambos errores, serán distinguibles gracias a la información adicional que provee el ErrorHandler. 
 \par \vspace{0.3cm}
-Una cosa importante del ErrorHandler es que esta vinculado a muchos módulos superiores de la librería. Uno de ellos es el ProtectionManager, un módulo especial que se encargará de cambiar el estado de la placa y su funcionamiento cuando se de una situación en la que el código previsto ya no pueda recuperarse a un estado funcional. 
+Una cosa importante del ErrorHandler es que está vinculado a muchos módulos superiores de la librería. Uno de ellos es el ProtectionManager, un módulo especial que se encargará de cambiar el estado de la placa y su funcionamiento cuando sé dé una situación en la que el código previsto ya no pueda recuperarse a un estado funcional. 
 \par
-El ErrorHandler esta vinculado de base al ProtectionManager, y cuando salte activará todas las protecciones de este. Así que se recomienda usar el ErrorHandler unicamente para errores. 
-
-\subsubsection{HalfBridge}
-%TODO
+El ErrorHandler está vinculado de base al ProtectionManager, y cuando salte activará todas las protecciones de este. Así que se recomienda usar el ErrorHandler únicamente para errores. 
 
 \subsubsection{Math}
 El módulo Math trata de abstraer el módulo CORDIC de la ST-LIB Core, gestionando los casos marginales, evitando divisiones por cero, y añadiendo nuevas funcionalidades que se puedan calcular con suficiente velocidad para que sea razonable usarla en lugar de arm\_math. \par \vspace{0.3cm}
-Math posee las mismas funciones que CORDIC más la tangente y arcotangente, en los métodos tg y atg. Hay algunas funcionalidades de CORDIC que no se pueden acceder desde Math directamente por simplicidad; como poner múltiples peticiones de calculos en una sola invocación del método. Este es un compromiso que toma el módulo Math para mantener su uso simple a cambio de perder algo de versatilidad y eficiencia en situaciones específicas. \par \vspace{0.3cm}
-Esta perdida de velocidad aumenta la duración de un ciclo del bucle que haga múltiples calculos iguales con distintos valores en alrededor de un 13\% (depende de la operación específica), pero quitando el caso concreto en el que se desee hacer centenas de veces el mismo cálculo sin operaciones intermedias, la velocidad de Math es muy similar a la de CORDIC; e incluso en este caso supera math\_arm con lógica de int en un factor medio de 2.5 (dependiente de la operación específica).
+Math posee las mismas funciones que CORDIC más la tangente y arco tangente, en los métodos tg y atg. Hay algunas funcionalidades de CORDIC que no se pueden acceder desde Math directamente por simplicidad; como poner múltiples peticiones de cálculos en una sola invocación del método. Este es un compromiso que toma el módulo Math para mantener su uso simple a cambio de perder algo de versatilidad y eficiencia en situaciones específicas. \par \vspace{0.3cm}
+Esta perdida de velocidad aumenta la duración de un ciclo del bucle que haga múltiples cálculos iguales con distintos valores en alrededor de un 13\% (depende de la operación específica), pero quitando el caso concreto en el que se desee hacer centenas de veces el mismo cálculo sin operaciones intermedias, la velocidad de Math es muy similar a la de CORDIC; e incluso en este caso supera math\_arm con lógica de int en un factor medio de 2.5 (dependiente de la operación específica).
 \par \vspace{0.3cm}
 En cuanto al uso de Math, es tan sencillo como convocar la función y recibir el valor que retorna: 
 \begin{figure}[h]
@@ -1278,13 +1277,13 @@ Como se puede ver ya no hace falta reservar punteros a las variables necesariame
 \subsubsection{Sensors}
 El grupo de módulos Sensors cumplen todos la misma función: abstraer las lecturas de periféricos con el uso de clases. Hay un caso especial, el del encoder, que trataremos en su propia sección. 
 \par \vspace{0.3cm}
-DigitalSensor es el primero de estos módulos y, como su nombre indica; codifica un sensor digital. Su funcionamiento es sencillo: Creas el objeto antes del start con una referencia a la variable que se desee modificar, y despues cuando se desee se convoca la función \textit{read} que actualiza el valor de susodicha variable. \par
-Como normalmente estos valores son accedidos por muchas funciones al mismo tiempo se ha evitado que devolviese en el read el valor mencionado para que el usuario no convocara múltiples veces la función de lectura \textit{read} para obtener el mismo valor; y redujera accidentalmente la velocidad de su código. En su lugar, se debe decidir a que velocidad se actualiza el valor del puntero y acceder a este, que contiene siempre el valor más actualizado, siempre que se desee; para guiar al programador a estructurar de forma correcta su código, pues aunque este sea más abstracto sigue siendo código de microcontrolador. 
+DigitalSensor es el primero de estos módulos y, como su nombre indica; codifica un sensor digital. Su funcionamiento es sencillo: Creas el objeto antes del \textbf{STLIB::start} con una referencia a la variable que se desee modificar, y después cuando se desee se convoca la función \textbf{read} que actualiza el valor de susodicha variable. \par
+Como normalmente estos valores son accedidos por muchas funciones al mismo tiempo se ha evitado que devolviese en el \textbf{read} el valor mencionado para que el usuario no convocara múltiples veces la función de lectura \textbf{read} para obtener el mismo valor; y redujera accidentalmente la velocidad de su código. En su lugar, se debe decidir a que velocidad se actualiza el valor del puntero y acceder a este, que contiene siempre el valor más actualizado, siempre que se desee; para guiar al programador a estructurar de forma correcta su código, pues aunque este sea más abstracto sigue siendo código de microcontrolador. 
 \par \vspace{0.3cm}
-El siguiente módulo del grupo es LinearSensor, que trata de codificar un sensor análogo pero con la abstracción añadida de escalar y desplazar el valor para ponerlo en las unidades adecuadas dentro del puntero. Si se desea obtener el voltaje, meramente con poner el escalado \textit{slope} a 1 y el desplazamiento \textit{offset} a 0 se conseguira en voltios la señal recibida. \par
-LinearSensor sigue las mismas guias de estructura que DigitalSensor, y fuerza al usuario a acceder al valor de puntero directamente en lugar de obtener el valor del \textit{read} para evitar que abrume con demasiadas peticiones de lectura al controlador. Añadir que LinearSensor es una clase que hace uso de templates para funcionar con el tipo de variable preferida por el usuario (normalmente una variante de la coma flotante)
+El siguiente módulo del grupo es LinearSensor, que trata de codificar un sensor análogo pero con la abstracción añadida de escalar y desplazar el valor para ponerlo en las unidades adecuadas dentro del puntero. Sí se desea obtener el voltaje, meramente con poner el escalado \textbf{slope} a 1 y el desplazamiento \textbf{offset} a 0 se conseguirá en voltios la señal recibida. \par
+LinearSensor sigue las mismas guías de estructura que DigitalSensor, y fuerza al usuario a acceder al valor de puntero directamente en lugar de obtener el valor del \textbf{read} para evitar que abrume con demasiadas peticiones de lectura al controlador. Añadir que LinearSensor es una clase que hace uso de templates para funcionar con el tipo de variable preferida por el usuario (normalmente una variante de la coma flotante)
 \par \vspace{0.3cm}
-Otra abstraccion de lectura de periféricos básica es el LookupSensor, que tiene como objetivo abstraer las \textit{Lookup Table}, tablas de valores preprocesados con el objetivo de transformar una formula matemática de alto coste de procesado a un único acceso a memoria a cambio de tener que ocupar dicha memoria. \par
+Otra abstracción de lectura de periféricos básica es el LookupSensor, que tiene como objetivo abstraer las \textit{Lookup Table}, tablas de valores preprocesados con el objetivo de transformar una fórmula matemática de alto coste de procesado a un único acceso a memoria a cambio de tener que ocupar dicha memoria. \par
 Su funcionalidad es sencilla: recibe una pequeña matriz que representa la tabla de valores de un tamaño deseado por el usuario; y separa el rango de valores posibles que puede recibir en análogo (normalmente de 0 a 3.3V, se puede cambiar con una variable denominada REFERENCE\_VOLTAGE) entre todas las entradas de la matriz. En la figura \ref{SensorsCode} un ejemplo de estos tres tipos de Sensor, funcionando todos al mismo tiempo
 
 \begin{figure}[H]
@@ -1308,11 +1307,11 @@ Su funcionalidad es sencilla: recibe una pequeña matriz que representa la tabla
   \label{SensorsCode}
 \end{figure}
 \par \vspace{0.3cm}
-Este ejemplo guarda el estado de PA5 en sensor\_state; el voltaje de PA6 en sensor\_voltage, y el valor de la \textit{look up table} en table\_lecture. Importante pasar los valores por referencia (\&) o no los actualizara. Además, imprime el valor obtenido por la LookupTable accediendo directamente a la variable, como se ha mencionado previamente. \par
-En el ejemplo de la figura \ref{SensorsCode} Table\_lecture contendra el valor 1 si el voltaje se encuentra entre $[0, 0.825)$, el valor 10 si se encuentra entre $[0.825, 1.65)$, y así hasta llegar a 3.3 v; que es el previamente mencionado valor de referencia. 
+Este ejemplo guarda el estado de PA5 en \textbf{sensor\_state}; el voltaje de PA6 en \textbf{sensor\_voltage}, y el valor de la \textit{look up table} en \textbf{table\_lecture}. Importante pasar los valores por referencia (\&) o no los actualizará. Además, imprime el valor obtenido por la LookupTable accediendo directamente a la variable, como se ha mencionado previamente. \par
+En el ejemplo de la figura \ref{SensorsCode} \textbf{Table\_lecture} contendra el valor 1 si el voltaje se encuentra entre $[0, 0.825)$, el valor 10 si se encuentra entre $[0.825, 1.65)$, y así hasta llegar a 3.3 v; que es el previamente mencionado valor de referencia. 
 \par \vspace{0.3cm}
-SensorInterrupt es una versión especializada de DigitalSensor que además abstrae ExternalInterrupt, activando una interrupción siempre que él estado del sensor cambie de la forma indicada en su constructor. \par 
-De base esta configurado para que la interrupción se active siempre que cambie de baja a alta (\textit{RISING}), pero las opciones de alta a baja o ambas también están disponibles. Cuando esta interrupción se active, la función que se paso en su constructor se ejecutará (a menos que otra interrupción de mayor importancia este en marcha, en cuyo caso se encolará).
+SensorInterrupt es una versión especializada de DigitalSensor que además abstrae ExternalInterrupt, activando una interrupción siempre que el estado del sensor cambie de la forma indicada en su constructor. \par 
+De base está configurado para que la interrupción se active siempre que cambie de baja a alta (\textit{RISING}), pero las opciones de alta a baja o ambas también están disponibles. Cuando esta interrupción se active, la función que se pasó en su constructor se ejecutará (a menos que otra interrupción de mayor importancia este en marcha, en cuyo caso se encolará).
 Un ejemplo de código del SensorInterrupt:
 \begin{figure}[H]
   \begin{lstlisting}
@@ -1328,7 +1327,7 @@ Un ejemplo de código del SensorInterrupt:
   \label{SensorInterruptCode}
 \end{figure}
 \par \vspace{0.3cm}
-Como se puede comprobar en este fragmento de código, en ningún momento se hace una lectura. Sin embargo, la interrupción sucede aunque no se este actualizando el valor; pues esa es la idea de la interrupción. Hay que tener en cuenta que no necesariamente todos los pines tienen la capacidad de usar EXTI por lo que puede fallar si se usa un pin sin esta habilidad. Ante la duda, se recomienda revisar la ficha técnica del microcontrolador o usar el .ioc para revisar si esta entre las opciones. 
+Como se puede comprobar en este fragmento de código, en ningún momento se hace una lectura. Sin embargo, la interrupción sucede aunque no se esté actualizando el valor; pues esa es la idea de la interrupción. Hay que tener en cuenta que no necesariamente todos los pines tienen la capacidad de usar EXTI por lo que puede fallar si se usa un pin sin esta habilidad. Ante la duda, se recomienda revisar la ficha técnica del microcontrolador o usar el .ioc para revisar si está entre las opciones. 
 
 \subsubsection{EncoderSensor}
 El EncoderSensor es el módulo que abstrae el Encoder, transformando el contador en un medidor de posición, velocidad y aceleración. Este módulo se estructura de la misma forma que el resto de módulos Sensor, pero debido a su complejidad y sus requisitos funcionales se ha decidido dar un apartado entero para este. 
@@ -1338,10 +1337,10 @@ Para calcular la derivada de la posición en el tiempo se ha usado una aproximac
 Esta aproximación es finita porque produce el resultado de un cálculo hecho dentro de un marco finito, es diferencial porque produce sus valores a partir de la diferencia entre dos puntos respecto a una variable (en este caso el tiempo); y es regresiva porque solo usa el punto que se quiere medir y los anteriores, nunca los posteriores. \par 
 No se usan los valores posteriores debido a que esto requeriría un predictor y se ha comprobado en pruebas que el intercambio de ganancia de precisión por perdida de velocidad de código no es razonable; y de ser necesario hay otras medidas más efectivas que tomar antes del uso de un predictor. 
 \par \vspace{0.3cm}
-Esta formula es extremadamente rápida y tiene el potencial de ofrecer una precisión cercana ${\pm}paso/2$ donde el paso es el desplazamiento necesario para que el encoder complete una rotación de 360\textdegree en su señal PWM. Sin embargo, requiere de calibrado de las variables para conseguir este nivel de cálculo. 
+Esta fórmula es extremadamente rápida y tiene el potencial de ofrecer una precisión cercana ${\pm}paso/2$ donde el paso es el desplazamiento necesario para que el encoder complete una rotación de 360\textdegree en su señal PWM. Sin embargo, requiere de calibrado de las variables para conseguir este nivel de cálculo. 
 \par \vspace{0.3cm}
-Las variables a modificar para el calibrado son: COUNTER\_DISTANCE\_IN\_METERS, N\_FRAMES, y FRAME\_SIZE\_IN\_SECONDS. La primera de las variables, COUNTER\_DISTANCE\_IN\_METERS; define cuanta distancia real representa cada paso del encoder, lo cual dependerá del ángulo que este represente y del perímetro de giro (en caso de no ser lineal). Para ello, se deberá consultar la ficha técnica del encoder específico que se esté usando y del dispositivo que se trate de medir. \par
-N\_FRAMES y FRAME\_SIZE\_IN\_SECONDS son, por otra parte, variables que afecta a como se captura el valor de cálculo. N\_FRAMES representa cuantos \textit{frames} guarda el EncoderSensor antes de sobreescribirlos, y FRAME\_SIZE\_IN\_SECONDS representa la distancia mínima entre dos \textit{frames} para que sean guardados. Aumentar cualquiera de las dos reduce el efecto de las perturbaciones y aumenta la precisión; pero también aumenta el tiempo de medida absoluta. Esto es, el tiempo que tarda desde que el objeto real a cambiado de una velocidad A a una velocidad B en actualizar la medida dada por el programa completamente de A a B. Este tiempo es, exactamente, (N\_FRAMES - 1) * FRAME\_SIZE\_IN\_SECONDS. 
+Las variables a modificar para el calibrado son: \textbf{COUNTER\_DISTANCE\_IN\_METERS}, \textbf{N\_FRAMES}, y \textbf{FRAME\_SIZE\_IN\_SECONDS}. La primera de las variables, \textbf{COUNTER\_DISTANCE\_IN\_METERS}; define cuanta distancia real representa cada paso del encoder, lo cual dependerá del ángulo que este represente y del perímetro de giro (en caso de no ser lineal). Para ello, se deberá consultar la ficha técnica del encoder específico que se esté usando y del dispositivo que se trate de medir. \par
+\textbf{N\_FRAMES} y \textbf{FRAME\_SIZE\_IN\_SECONDS} son, por otra parte, variables que afecta a como se captura el valor de cálculo. \textbf{N\_FRAMES} representa cuantos \textit{frames} guarda el EncoderSensor antes de sobreescribirlos, y \textbf{FRAME\_SIZE\_IN\_SECONDS} representa la distancia mínima entre dos \textit{frames} para que sean guardados. Aumentar cualquiera de las dos reduce el efecto de las perturbaciones y aumenta la precisión; pero también aumenta el tiempo de medida absoluta. Esto es, el tiempo que tarda desde que el objeto real a cambiado de una velocidad A a una velocidad B en actualizar la medida dada por el programa completamente de A a B. Este tiempo es, exactamente, (\textbf{N\_FRAMES} - 1) * \textbf{FRAME\_SIZE\_IN\_SECONDS}. 
 
 \begin{figure}[H]
   \centering
@@ -1351,11 +1350,11 @@ N\_FRAMES y FRAME\_SIZE\_IN\_SECONDS son, por otra parte, variables que afecta a
 \end{figure}
 
 \par \vspace{0.3cm}
-En el diagrama \ref{PosTimeGraphic} se puede observar un ejemplo de una gráfica generada a partir de la posición del objeto de medida en el tiempo, estándo la posición en el eje y (metros) y el tiempo en el eje x (segundos). Asumiendo que su trayecto termina en el punto 0.1 m, y por ende en el segundo diez esta parado; el cálculo de velocidad del EncoderSensor tardará el tiempo de medida absoluta en indicar, desde el segundo diez, que nuestro objeto se ha parado completamente. \par
-Asumiendo un N\_FRAMES igual a 3 y un FRAME\_SIZE\_IN\_SECONDS de 1.0 s, en el segundo 10 indicará 0.125 m/s, en el 11 0.085 m/s, y en el 12 0.0 m/s. Como se puede observar, no alcanza la velocidad real hasta que han pasado dos segundos. Este efecto se puede reducir decrementando el valor de cualquiera de las dos variables, pero esto también aumentará el efecto de perturbaciones y reducirá la precisión de medida. \par
-Adicionalmente, aumentar N\_FRAMES ocupa más espacio en memoria (pues aumenta el tamaño de la matriz de guardado), y aumentar FRAME\_SIZE\_IN\_SECONDS provoca mayor retardo en la actualización de los valores, pues estos solo se actualizan cada nuevo \textit{frame}. Unos valores razonables rondan N\_FRAMES 500 y  FRAME\_SIZE\_IN\_SECONDS 0.0007, pero esto realmente depende de los requisitos del usuario. 
+En el diagrama \ref{PosTimeGraphic} se puede observar un ejemplo de una gráfica generada a partir de la posición del objeto de medida en el tiempo, estando la posición en el eje y (metros) y el tiempo en el eje x (segundos). Asumiendo que su trayecto termina en el punto 0.1 m, y por ende en el segundo diez está parado; el cálculo de velocidad del EncoderSensor tardará el tiempo de medida absoluta en indicar, desde el segundo diez, que nuestro objeto se ha parado completamente. \par
+Asumiendo un \textbf{N\_FRAMES} igual a 3 y un \textbf{FRAME\_SIZE\_IN\_SECONDS} de 1.0 s, en el segundo 10 indicará 0.125 m/s, en el 11 0.085 m/s, y en el 12 0.0 m/s. Como se puede observar, no alcanza la velocidad real hasta que han pasado dos segundos. Este efecto se puede reducir decrementando el valor de cualquiera de las dos variables, pero esto también aumentará el efecto de perturbaciones y reducirá la precisión de medida. \par
+Adicionalmente, aumentar \textbf{N\_FRAMES} ocupa más espacio en memoria (pues aumenta el tamaño de la matriz de guardado), y aumentar \textbf{FRAME\_SIZE\_IN\_SECONDS} provoca mayor retardo en la actualización de los valores, pues estos solo se actualizan cada nuevo \textit{frame}. Unos valores razonables rondan N\_FRAMES 500 y \textbf{FRAME\_SIZE\_IN\_SECONDS} 0.0007, pero esto realmente depende de los requisitos del usuario. 
 \par \vspace{0.3cm}
-Una vez calibrado, a la hora de programar el código es igual de simple que el resto de la familia de módulos Sensor. Se declara antes del STLIB::start(), se activa \footnote{el EncoderSensor no se activa solo en el start porque comienza a tomar medidas en ese punto, que considera el segundo 0. Como cuando se desee que comience a medir y tome de marco de referencia el segundo 0 depende del usuario, se a optado por no activarlo con el STLIB::start()} y se toman medidas de forma cíclica. 
+Una vez calibrado, a la hora de programar el código es igual de simple que el resto de la familia de módulos Sensor. Se declara antes del \textbf{STLIB::start()}, se activa \footnote{el EncoderSensor no se activa solo en el start porque comienza a tomar medidas en ese punto, que considera el segundo 0. Como cuando se desee que comience a medir y tome de marco de referencia, el segundo 0 depende del usuario, se ha optado por no activarlo con el \textbf{STLIB::start()}} y se toman medidas de forma cíclica. 
 \begin{figure}[h]
   \begin{lstlisting}
     float position = 0;
@@ -1373,9 +1372,9 @@ Una vez calibrado, a la hora de programar el código es igual de simple que el r
   \label{EncoderSensorCode}
 \end{figure}
 \par \vspace{0.3cm}
-Lo único de relevancia que queda indicar en este código es que la variable FRAME\_SIZE\_IN\_SECONDS solo funciona mientras se ejecute el método read() del EncoderSensor con un periodo de tiempo entre ejecuciones estrictamente menor que FRAME\_SIZE\_IN\_SECONDS. En el caso contrario, el código seguira funcionando pero en lugar de usar FRAME\_SIZE\_IN\_SECONDS para la distancia entre \textit{frames}, usará el tiempo entre ejecuciones pues es en estas donde se obtienen los \textit{frames}. \par
-Cada \textit{frame} guarda el punto en el tiempo en el que fue calculado, así que el cálculo no se verá afectado directamente si hay algun retraso, pero si de forma consistente se ejecuta con menor velocida de la requerida por su FRAME\_SIZE\_IN\_SECONDS, se puede comprometer el tiempo de medida absoluta y la velocidad de actualización de los valores. \par \vspace{0.3cm}
-Se recomienda poner el read() o bien en el bucle permanente del código (como se ve en el diagrama \ref{EncoderSensorCode}) o bien en una interrupción periódica para asegurar su correcto funcionamiento. 
+Lo único de relevancia que queda indicar en este código es que la variable \textbf{FRAME\_SIZE\_IN\_SECONDS} solo funciona mientras se ejecute el método \textbf{read()} del EncoderSensor con un periodo de tiempo entre ejecuciones estrictamente menor que \textbf{FRAME\_SIZE\_IN\_SECONDS}. En el caso contrario, el código seguira funcionando pero en lugar de usar \textbf{FRAME\_SIZE\_IN\_SECONDS} para la distancia entre \textit{frames}, usará el tiempo entre ejecuciones pues es en estas donde se obtienen los \textit{frames}. \par
+Cada \textit{frame} guarda el punto en el tiempo en el que fue calculado, así que el cálculo no se verá afectado directamente si hay algún retraso, pero si de forma consistente se ejecuta con menor velocidad de la requerida por su \textbf{FRAME\_SIZE\_IN\_SECONDS}, se puede comprometer el tiempo de medida absoluta y la velocidad de actualización de los valores. \par \vspace{0.3cm}
+Se recomienda poner el \textbf{read()} o bien en el bucle permanente del código (como se ve en el diagrama \ref{EncoderSensorCode}) o bien en una interrupción periódica para asegurar su correcto funcionamiento. 
 
 \subsubsection{StateMachine}
 StateMachine es un módulo de abstracción del concepto de una máquina de estados, un concepto muy usado en el mundo de la programación de microcontroladores pues permite separar los requisitos funcionales entre varios estados; y añadir un funcionamiento especial para cuando el producto se encuentre en un estado irrecuperable por código, un estado de emergencia conocido generalmente como 
@@ -1404,9 +1403,9 @@ Para poder usarlo, primero se deben de crear los posibles estados en los que el 
 \end{figure}
 \par \vspace{0.3cm}
 
-En el código de el diagrama \ref{StateMachineDefCode} se puede ver como se vería un \textit{main} que incluyese una máquina de estados con tres estados: INITIAL, OPERATIONAL y FAULT. Una vez se tienen los estados, se deben introducir las transiciones. 
+En el código del diagrama \ref{StateMachineDefCode} se puede ver como se vería un \textit{main} que incluyese una máquina de estados con tres estados: \textbf{INITIAL}, \textbf{OPERATIONAL} y \textbf{FAULT}. Una vez se tienen los estados, se deben introducir las transiciones. 
 \par \vspace{0.3cm}
-Para introducir las transiciones hay dos posibles opciones. La primera es crear un método que compruebe una condición y en caso de cumplirse fuerce la transición con el método force\_change\_state() de la clase StateMachine y convocarlo cada cierto tiempo con una interrupción, dentro de otro método, o en el bucle. La segunda opción es crear una función que devuelva verdadero cuando se cumpla una condición, y usar el método add\_transitions() para añadir una transición de un estado A a otro B cuando se cumpla la condición. Esta comprobación se hace dentro del método check\_transitions(); que también pertenece a la clase y se deberá convocar periodicamente. 
+Para introducir las transiciones hay dos posibles opciones. La primera es crear un método que compruebe una condición y en caso de cumplirse fuerce la transición con el método \textbf{force\_change\_state()} de la clase StateMachine y convocarlo cada cierto tiempo con una interrupción, dentro de otro método, o en el bucle. La segunda opción es crear una función que devuelva verdadero cuando se cumpla una condición, y usar el método \textbf{add\_transitions()} para añadir una transición de un estado A a otro B cuando se cumpla la condición. Esta comprobación se hace dentro del método \textbf{check\_transitions();} que también pertenece a la clase y se deberá convocar periódicamente. 
 \par \vspace{0.3cm}
 Lo más común es usar la segunda opción, pues permite controlar en que estados se comprueba esta condición, a que estados llevará cuando se active, y permite centralizar en una única llamada el control de la máquina de estados, ayudando a organizar el código. \par 
 Sin embargo, la primera opción tiene también sus casos de uso, pues permite crear cambios de estado más críticos, que se comprueben aparte del resto de transiciones y fuercen inmediatamente el cambio de estado nada más se cumplan.
@@ -1447,12 +1446,12 @@ Sin embargo, la primera opción tiene también sus casos de uso, pues permite cr
 \end{figure}
 \par \vspace{0.3cm}
 
-Para evitar abarrotar el código con demasiadas líneas en el diagrama \ref{StateMachineTransitionCode}, no se ha escrito la definición de las funciones start\_success, start\_failure, fault\_values, o more\_important\_fault\_values; pero todas estas són funciones que retornan un valor booleano, que deberá definir el propio usuario dependiendo de sus requisitos funcionales. \par
-Dentro del mencionado diagrama, se puede observar tanto la primera forma de definir transciones, las cuales han sido insertadas dentro de una interrupción que se cumplirá cada 100 microsegundos; como la segunda forma, que se comprobará cada vez que el bucle permanente se ejecute, y se define a traves de los add\_transitions, los estados que deben transicionar, y la función que retorna verdadero si se cumplen las condiciones. 
+Para evitar abarrotar el código con demasiadas líneas en el diagrama \ref{StateMachineTransitionCode}, no se ha escrito la definición de las funciones \textbf{start\_success}, \textbf{start\_failure}, \textbf{fault\_values}, o \textbf{more\_important\_fault\_values}; pero todas estas són funciones que retornan un valor booleano, que deberá definir el propio usuario dependiendo de sus requisitos funcionales. \par
+Dentro del mencionado diagrama, se puede observar tanto la primera forma de definir transiciones, las cuales han sido insertadas dentro de una interrupción que se cumplirá cada 100 microsegundos; como la segunda forma, que se comprobará cada vez que el bucle permanente se ejecute, y se define a través de los \textbf{add\_transitions}, los estados que deben transicionar, y la función que retorna verdadero si se cumplen las condiciones. 
 \par \vspace{0.3cm}
-En este punto ya se tiene una máquina de estados funcional, de la cual se puede substraer el estado en cualquier instante a traves de la variable current\_state dentro del objeto, y siempre que las comprobaciones se hagan correctamente se obtendrá el estado deseado. Sin embargo, el módulo no termina aquí, pues tiene funcionalidades añadidas; y está diseñado para que la mayoría del código se ejecute dentro del objeto StateMachine. 
+En este punto ya se tiene una máquina de estados funcional, de la cual se puede substraer el estado en cualquier instante a través de la variable \textbf{current\_state} dentro del objeto, y siempre que las comprobaciones se hagan correctamente se obtendrá el estado deseado. Sin embargo, el módulo no termina aquí, pues tiene funcionalidades añadidas; y está diseñado para que la mayoría del código se ejecute dentro del objeto StateMachine. 
 \par \vspace{0.3cm}
-Se puede añadir código que se ejecute inmediatamente tras una transición, código que se ejecute periodicamente a través de una alarma unicamente en ciertos estados, y anidar máquinas de estados a estados de otra máquina de estados que solo se actualicen y ejecuten sus funciones mientras su máquina padre esté en el estado al que fueron anidadas; sin límite de niveles de anidamiento. 
+Se puede añadir código que se ejecute inmediatamente tras una transición, código que se ejecute periódicamente a través de una alarma únicamente en ciertos estados, y anidar máquinas de estados a estados de otra máquina de estados que solo se actualicen y ejecuten sus funciones mientras su máquina padre esté en el estado al que fueron anidadas; sin límite de niveles de anidamiento. 
 \begin{figure}[h]
   \begin{lstlisting}
     enum states{
@@ -1488,17 +1487,19 @@ Se puede añadir código que se ejecute inmediatamente tras una transición, có
 \end{figure}
 \par \vspace{0.3cm}
 
-En el código del diagrama \ref{StateMachineUtilitiesCode} se ha removido las transiciones y no se han definido los métodos entry\_fault, entry\_operational, exit\_initial, y cyclic\_operational para evitar, de nuevo, abarrotar el código con lineas. Las transiciones se pueden observar en el diagrama \ref{StateMachineTransitionCode} y los cuatro métodos tienen un código arbitrario, definido por el usuario, que han de ejecutar cuando se cumpla la condición a la que se vincularon y no retornan nada (return type void) obligatoriamente. 
+En el código del diagrama \ref{StateMachineUtilitiesCode} se ha removido las transiciones y no se han definido los métodos \textbf{entry\_fault}, \textbf{entry\_operational}, \textbf{exit\_initial}, y \textbf{cyclic\_operational} para evitar, de nuevo, abarrotar el código con líneas. Las transiciones se pueden observar en el diagrama \ref{StateMachineTransitionCode} y los cuatro métodos tienen un código arbitrario, definido por el usuario, que han de ejecutar cuando se cumpla la condición a la que se vincularon y no retornan nada (\textit{return type void}) obligatoriamente. 
 \par \vspace{0.3cm}
 Además, se puede ver que ahora se usa la librería de C++ chrono para introducir la frecuencia con la que se deben ejecutar las acciones cíclicas. Lo único que hay que apuntar sobre esto es que las acciones cíclicas siguen teniendo las mismas limitaciones que las alarmas del módulo Time, por lo que hacer que una acción cíclica de baja precisión se ejecute cada menos de un milisegundo, una media precisión cada menos de 50 microsegundos, o una alta precisión cada menos de 1 microsegundo; no cumplirá con las estampas de tiempo indicadas pues está fuera de su rango de control. 
 
 \subsection{ST-LIB High}
 ST-LIB High es la capa de mayor abstracción de toda la librería, y usarla puede traer grandes beneficios de seguridad, diseño y velocidad de desarrollo; pero también puede añadir un coste de ejecución alto.
+\par
+En este apartado se mostrarán los módulos de uso general dentro de la ST-LIB High, pues los módulos más específicos son un proyecto a futuro y están preparadas para cubrir a un público más concreto. 
 \subsubsection{Notification}
-Notification es el módulo de abstracción de los paquetes TCP de la librería. Esta abstracción esta diseñada para simular la difusión masiva a partir de comunicar a todas sus conexiones TCP las notificaciones recibidas. \par
+Notification es el módulo de abstracción de los paquetes TCP de la librería. Esta abstracción está diseñada para simular la difusión masiva a partir de comunicar a todas sus conexiones TCP las notificaciones recibidas. \par
 Además, las Notification están diseñadas para comunicar cadenas de caracteres y su objetivo es hacer llegar al servidor software que se comunique con el proyecto información en un formato más amigable para las comunicaciones escalables; siendo un ejemplo JSON.
  \par \vspace{0.3cm}
-Su construcción es igual que la de un paquete TCP, con la ligera variación de que el callback es obligatorio y los resultados los aloca dentro del propio objeto en lugar de en un puntero externo que se le deba pasar en el constructor. 
+Su construcción es igual que la de un paquete TCP, con la ligera variación de que el \textit{callback} es obligatorio y los resultados los aloja dentro del propio objeto en lugar de en un puntero externo que se le deba pasar en el constructor. 
 \begin{figure}[h]
   \begin{lstlisting}
     ST-LIB::start();
@@ -1518,20 +1519,20 @@ Su construcción es igual que la de un paquete TCP, con la ligera variación de 
 \end{figure}
 \par \vspace{0.3cm}
 En el ejemplo solo hay una conexión disponible, pero funcionará con tantas conexiones como se declare, y tanto con conexiones servidor como con conexiones cliente. Es importante apuntar, que al igual que con los paquetes, solo se puede recibir una notificación que tenga una id de paquete declarada; lo cual está hecho para evitar comunicaciones y comportamientos indeseados. \par 
-Un paquete con id 13 no sería recibido por este código; mientras que uno con id 10 sería recibido correctamente, aplicaría el efecto de una puerta negada a la variable booleana value, y esparciría usando difusión amplia a todas sus conexiones el valor. El paquete con id 20 simplemente esparciría la cadena de caracteres recibida sin hacer nada más. Notify() es el método usado para comunicar la notificación a todas las conexiones TCP abiertas, y sirve para comenzar la difusión del mensaje. \par \vspace{0.3cm}
-Se recomienda no hacer directamente un Notify() dentro del método \textit{callback} de una notificación, pues puede provocar un efecto cascada que abrume el bus Ethernet con infinidad de paquetes si no se gestiona correctamente.  
+Un paquete con id 13 no sería recibido por este código; mientras que uno con id 10 sería recibido correctamente, aplicaría el efecto de una puerta negada a la variable booleana \textbf{value}, y esparciría usando difusión amplia a todas sus conexiones el valor. El paquete con id 20 simplemente esparciría la cadena de caracteres recibida sin hacer nada más. \textbf{Notify()} es el método utilizado para comunicar la notificación a todas las conexiones TCP abiertas, y sirve para comenzar la difusión del mensaje. \par \vspace{0.3cm}
+Se recomienda no hacer directamente un \textbf{Notify()} dentro del método \textit{callback} de una notificación, pues puede provocar un efecto cascada que abrume el bus Ethernet con infinidad de paquetes si no se gestiona correctamente.  
 
 \subsubsection{ProtectionManager}
 El ProtectionManager es el módulo supervisor de la librería, que mantiene el control de las máquinas de estados y permite controlarlas con mayor facilidad. 
 \par \vspace{0.3cm}
-Como se menciono en el ErrorHandler, ProtectionManager tiene algunas protecciones internas ya programadas para casos que siempre las requieren, siendo el caso más interesante la activación del ErrorHandler. Siempre que se haga una llamada al ErrorHandler y el ProtectionManager esté activo, el ProtectionManager mandará a \textit{FAULT} (o el estado de emergencia que el usuario le haya dado) inmediatamente a la máquina de estados. 
+Como se mencionó en el ErrorHandler, ProtectionManager tiene algunas protecciones internas ya programadas para casos que siempre las requieren, siendo el caso más interesante la activación del ErrorHandler. Siempre que se haga una llamada al ErrorHandler y el ProtectionManager esté activo, el ProtectionManager mandará a \textit{FAULT} (o el estado de emergencia que el usuario le haya dado) inmediatamente a la máquina de estados. 
 \par \vspace{0.3cm}
-Además, cuando la máquina de estados llega al estado de emergencia, envia una notificación que todas las placas que usen el módulo ProtectionManager poseen, y manda su máquina de estados tambien al estado de emergencia; provocando que todas las placas de la red vayan al estado de emergencia para poner en modo seguro a todo el código del producto en caso de una emergencia. 
+Además, cuando la máquina de estados llega al estado de emergencia, envía una notificación que todas las placas que usen el módulo ProtectionManager poseen, y manda su máquina de estados también al estado de emergencia; provocando que todas las placas de la red vayan al estado de emergencia para poner en modo seguro a todo el código del producto en caso de una emergencia. 
 \par \vspace{0.3cm}
-En el ProtectionManager hay dos tipos de protecciones, las normales y las de alta frecuencia. El propósito de esto es facilitar la organización de las dos formas de de crear transiciones en las máquinas de estados para el caso del ProtectionManager. La única diferencia entre ambas es que una se convoca en el método check\_protections, y la otra en check\_high\_frequency\_protections. La frecuencia a la que estos métodos se convoquen depende del propio usuario. 
+En el ProtectionManager hay dos tipos de protecciones, las normales y las de alta frecuencia. El propósito de esto es facilitar la organización de las dos formas de crear transiciones en las máquinas de estados para el caso del ProtectionManager. La única diferencia entre ambas es que una se convoca en el método \textbf{check\_protections}, y la otra en \textbf{check\_high\_frequency\_protections}. La frecuencia a la que estos métodos se convoquen depende del propio usuario. 
 \par \vspace{0.3cm}
 Las protecciones en sí funcionan de forma distinta que las transiciones de estado, y no planean necesariamente sustituirlas. En su lugar, son una forma de poner límites al estado del código, como un máximo tiempo, un rango de aceptabilidad, o que una variable sea igual que un estado. Esto las hace mucho más rápidas de ejecutar y permite estructurarse de forma limpia los estados en los que las variables se pueden encontrar. \par 
-Adicionalmente, cuando se activa el ProtectionManager la notificación que envia explica brevemente en la cadena de caracteres que guarda que variable alcanzo el límite y cuando la alcanzo\footnote{usando RTC, por lo que para esto requiere un servidor NTP o tener el reloj correctamente sincronizado}. El errorHandler tiene un mensaje específico que da toda la información que este ofrece normalmente por el printf. 
+Adicionalmente, cuando se activa el ProtectionManager la notificación que envía explica brevemente en la cadena de caracteres que guarda que variable alcanzo el límite y cuando la alcanzo\footnote{usando RTC, por lo que para esto requiere un servidor NTP o tener el reloj correctamente sincronizado}. El errorHandler tiene un mensaje específico que da toda la información que este ofrece normalmente por el \textbf{printf}. 
 
 \begin{figure}[h]
   \begin{lstlisting}
@@ -1563,7 +1564,7 @@ Adicionalmente, cuando se activa el ProtectionManager la notificación que envia
   \label{ProtectionManagerCode}
 \end{figure}
 \par \vspace{0.3cm}
-En el diagrama \ref{ProtectionManagerCode} se puede ver un ejemplo de como se usaria el ProtectionManager para proteger una variable y controlar cuando esta alcanza su máximo valor. Las opciones son BELOW, ABOVE, OUT\_OF\_RANGE (recibe tanto límite inferior como superior), EQUALS, NOT\_EQUALS, y TIME\_ACCUMULATION. El caso especial ERROR\_HANDLER no esta pensado para que sea usado para otra cosa.
+En el diagrama \ref{ProtectionManagerCode} se puede ver un ejemplo de como se usaría el ProtectionManager para proteger una variable y controlar cuando esta alcanza su máximo valor. Las opciones son \textbf{BELOW}, \textbf{ABOVE}, \textbf{OUT\_OF\_RANGE} (recibe tanto límite inferior como superior), \textbf{EQUALS}, \textbf{NOT\_EQUALS}, y \textbf{TIME\_ACCUMULATION}. El caso especial \textbf{ERROR\_HANDLER} no está pensado para que sea usado para otra cosa.
 
 
 
@@ -1622,7 +1623,7 @@ Sin embargo, observando la diferencia de legibilidad , reusabilidad, y versatili
   return SPI1->DR;
 
   \end{lstlisting}
-  \caption{Ejemplo de código que envia un valor por un periférico SPI usando LL directamente, sin protecciones ni control de bus}
+  \caption{Ejemplo de código que envía un valor por un periférico SPI usando LL directamente, sin protecciones ni control de bus}
   \label{LLSPICode}
 \end{figure}
 
@@ -1681,7 +1682,7 @@ El código de la OrangePi es un servidor de Python hecho en Flask que esta dise�
 Los tests que deben pasar el código de la placa son comprobaciones que indican el orden en el que deben de suceder las cosas y comprueban a través del bus Ethernet si el resultado ha sido el esperado. Estos indican que código se ha de subir a la SHUTP, que peticiones se le han de mandar a dicho código a través de Ethernet, y dado estas peticiones que resultados le debe devolver la núcleo y en que margen de tiempo. Estos tests están hechos en Python y son ejecutados en orden alfabético y de forma atómica. Si un test falla las pruebas continúan y simplemente se registra el fallo. Si era una prueba de cliente, también se le da la opción de interrumpir los tests y se le avisa nada más se da el fallo. \par
 El código a probar debe ser uno que usando la ST-LIB emule una ejecución de un caso de uso real, este adaptado para activar las núcleos emuladoras de la SHUTP en los modos deseados para hacer las pruebas, y comunique continuamente los datos necesarios para que los tests puedan juzgar si la ejecución funciona como se espera y los resultados son los correctos. Este sera el código que se suba junto a la librería a través del Bootloader. La separación de test y código a testear es por comodidad. En lugar de hacer un gran test con múltiples datos para cada código, se separa en varios tests que comprueben distintas funcionalidades de forma modular, haciendo más fácil añadir nuevos tests en el futuro sin afectar a los ya existentes.
 \par \vspace{0.3cm}
-En cuanto a los tests en sí, se creo una librería de python que permitía emular el funcionamiento de una placa en el nivel de comunicación y guardaba la estructura de pines de un microcontrolador para poder hacer con facilidad peticiones a la SHUTP desde el test, como leer el valor del Pin PC6 cuando el Pin PA5 esta en alta y cuando esta en baja, y obtener los tiempos de diferencia desde que se envia la petición hasta que llega el cambio a la OrangePi. 
+En cuanto a los tests en sí, se creo una librería de python que permitía emular el funcionamiento de una placa en el nivel de comunicación y guardaba la estructura de pines de un microcontrolador para poder hacer con facilidad peticiones a la SHUTP desde el test, como leer el valor del Pin PC6 cuando el Pin PA5 esta en alta y cuando esta en baja, y obtener los tiempos de diferencia desde que se envía la petición hasta que llega el cambio a la OrangePi. 
 \par \vspace{0.3cm}
 La razón para hacer tests automáticos es principalmente para no tener que repetir los tests cada vez que se actualice la librería. Al tratar de abstraer algo de tan bajo nivel como el código de los microcontroladores, tratando de mantener tanto la eficiencia como no comprometer la dificultad de uso de la librería, es muy fácil cometer errores. No tener en cuenta un comportamiento específico, desconocer algunas propiedades específicas de una funcionalidad que se desea abstraer, o incluso intentar añadir cambios que no son posibles o su costo en otro ámbito lo hace irrazonable. 
 \par
